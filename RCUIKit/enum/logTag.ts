@@ -1,0 +1,10 @@
+export enum LogTag {
+  // 录音日志
+  K_RECORD_T = 'K_RECORD_T',
+  K_RECORD_R = 'K_RECORD_R',
+  K_RECORD_E = 'K_RECORD_E',
+  K_RECORD_O = 'K_RECORD_O',
+  K_RECORD_S = 'K_RECORD_S',
+  K_DRAFT_E = 'K_DRAFT_E',
+  K_PERMISSION_S = 'K_UTILS_PERMISSION_S',
+}

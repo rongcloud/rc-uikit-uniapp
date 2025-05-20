@@ -1,0 +1,28 @@
+// 定义全局字体大小变量
+$rc-font-size-base: 28rpx;
+$rc-font-size-regular: 32rpx;
+$rc-font-size-small: 24rpx;
+$rc-font-size-large: 40rpx;
+
+$rc-conversation-margin-base: 16px;
+
+$rc-color-primary: #0047FF; // 主色调
+
+$rc-color-font-primary: #000000; // 主文字颜色
+$rc-color-font-secondary: #838383; // 次文字颜色
+$rc-color-font-accent: #C1C1C1; // 辅助&提示文字颜色
+$rc-color-font-inverse: #FFFFFF; // 反白文字颜色
+
+$rc-color-bg-regular: #F2F2F2; // 背景色-常规
+$rc-color-bg-auxiliary-1: #FFFFFF; // 背景色-辅助1
+$rc-color-bg-auxiliary-2: #4679FF; // 背景色-辅助2
+$rc-color-bg-top: #EFF1F7; // 背景色-置顶
+$rc-color-bg-selected: #DBE0EF; // 背景色-选择&长按
+$rc-color-bg-shade: rgba(0, 0, 0, 0.5); // 背景色-遮罩
+$rc-color-bg-accent: #DEDEDE; // 背景色-提示
+
+$rc-color-functional-success: #51E174; // 功能色-成功
+$rc-color-functional-hint: #F74D43; // 功能色-提示
+$rc-color-functional-link: #0047FF; // 功能色-链接
+$rc-color-functional-border: #E4E4E4; // 功能色-边框
+$rc-color-functional-error: #FD4C4C; // 功能色-错误，异常
