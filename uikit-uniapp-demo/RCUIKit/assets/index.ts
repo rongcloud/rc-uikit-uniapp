@@ -45,8 +45,10 @@ import deleteText2Icon from './icon/delete-text2.svg?raw';
 import downloadIcon from './icon/download.svg?raw';
 import downloadLoadingIcon from './icon/download-loading.svg?raw';
 import { encode } from 'base-64';
+import { vueVersion } from '../adapter-vue';
 
 function createObjectURL(content: string, type: string): string {
+  if (vueVersion === 2) return content;
   return `data:${type};base64,${encode(content)}`;
 }
 

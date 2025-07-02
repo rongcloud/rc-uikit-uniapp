@@ -68,7 +68,7 @@ import MessageFile from './messageType/message-file.vue';
 // 需要注意：此处的路径为示例路径，文件本身不存在，需要根据实际情况进行调整
 // import MessageCustom from '@/XXX/custom-message.vue';
 
-import { PropType, defineProps } from 'vue';
+import { PropType, defineProps } from '../../../adapter-vue';
 import { MessageType, MessageDirection } from '@rongcloud/imlib-next';
 import { formatTime } from '@/RCUIKit/utils';
 import { IKitMessage } from '@rongcloud/imkit-store';

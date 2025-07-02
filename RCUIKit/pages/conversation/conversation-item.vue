@@ -34,8 +34,8 @@
 
 <script setup lang="ts">
 import {
- PropType, ref, computed, defineProps, defineEmits,
-} from 'vue';
+ PropType, ref, computed, defineProps, defineEmits, onUnmounted,
+} from '../../adapter-vue';
 import { IKitConversation } from '@rongcloud/imkit-store';
 import badge from '@/RCUIKit/components/badge.vue';
 import avatar from '@/RCUIKit/components/avatar.vue';
@@ -44,7 +44,6 @@ import { formatTime, parseMessage2Text } from '@/RCUIKit/utils/index';
 import LongPressPopup from '@/RCUIKit/components/long-press-popup.vue';
 import { MessageDirection, MessageType, SentStatus } from '@rongcloud/imlib-next';
 import { reaction } from 'mobx';
-import { onUnmounted } from 'vue';
 
 const props = defineProps({
   // 会话数据

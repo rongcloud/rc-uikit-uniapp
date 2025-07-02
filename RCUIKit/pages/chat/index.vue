@@ -35,12 +35,14 @@ import MessageInput from './message/messageInput/message-input.vue';
 import { autorun } from 'mobx';
 import {
  ref, onUnmounted, onMounted, computed,
-} from 'vue';
+} from '../../adapter-vue';
 import { IKitConversation, IKitMessage } from '@rongcloud/imkit-store';
 import { MessageItemType } from './message/message-item.vue';
 import { deepClone } from '@/RCUIKit/utils';
 import { events } from '@/RCUIKit/constant/events';
 import { ConversationType } from '@rongcloud/imlib-next';
+import { onHide } from '@dcloudio/uni-app';
+import { AudioManager } from './message/manager/audio-manager';
 
 const nickname = ref('');
 // 未读消息数
@@ -78,6 +80,9 @@ onUnmounted(() => {
   unreadCountDisposer();
 });
 
+onHide(() => {
+  AudioManager.getInstance().stopAudio();
+});
 </script>
 
 <style lang="scss">

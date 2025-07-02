@@ -10,7 +10,7 @@
 </template>
 
 <script setup lang="ts">
-import { PropType } from 'vue';
+import { PropType } from '../../../adapter-vue';
 import Avatar from '@/RCUIKit/components/avatar.vue';
 import { DEFAULT_USER_PORTRAIT_SVG } from '@/RCUIKit/assets';
 

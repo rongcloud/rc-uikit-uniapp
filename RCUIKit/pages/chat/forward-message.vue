@@ -16,7 +16,7 @@
         <SelectMemberItem
           v-for="item in conversationList"
           :key="item.key"
-          :data="{portraitUri: item.portraitUri, name: parseConversationName(item)! }"
+          :data="{portraitUri: item.portraitUri, name: parseConversationName(item) || '' }"
           @onSelect="onConversationClick(item)"
         />
       </scroll-view>
@@ -28,13 +28,10 @@
         <view class="rc-popup-head">发送给</view>
         <SelectMemberItem
           class="rc-popup-memeber"
-          :data="{
-            portraitUri: selectConversation?.portraitUri,
-            name: selectConversation?.nickName || selectConversation?.name || selectConversation?.key || ''
-          }"
+          :data="selectMemberData"
         />
         <view class="rc-popup-message">
-            {{ selectedMessages[0]?.user?.nickname }}: {{ parseMessage2Text(selectedMessages[0]!.messageType, selectedMessages[0]?.content.content) }}
+            {{ showMessageText }}
         </view>
         <view class="rc-popup-footer">
           <view class="rc-popup-footer-button" @click="cancelForward">
@@ -50,14 +47,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed } from '../../adapter-vue';
 import NavBar from '@/RCUIKit/components/nav-bar.vue';
 import RCIcon from '@/RCUIKit/components/rc-icon.vue';
 import UniPopup from '@/RCUIKit/components/uni-components/uni-popup/components/uni-popup/uni-popup.vue';
 import SelectMemberItem from '@/RCUIKit/pages/chat/message/select-member-item.vue';
 import { IKitConversation, IKitMessage } from '@rongcloud/imkit-store';
 import { ConversationType, ErrorCode } from '@rongcloud/imlib-next';
-import { parseMessage2Text, parseConversationName } from '@/RCUIKit/utils';
+import { parseMessage2Text, parseConversationName, deepClone } from '@/RCUIKit/utils';
 
 const backToChat = () => {
   uni.navigateBack();
@@ -65,13 +62,20 @@ const backToChat = () => {
 
 const conversationList = computed(() => _conList.slice(0, page.value * 15));
 
+const selectMemberData = computed(() => ({
+	portraitUri: selectConversation.value?.portraitUri,
+	name: selectConversation.value?.nickName || selectConversation.value?.name || selectConversation.value?.key || '',
+}));
+
 const _hasMore = ref(true);
 
 const selectConversation = ref<IKitConversation>();
 
 const selectedMessages = ref<IKitMessage[]>([]);
 
-const _conList = uni.$RongKitStore.conversationStore.conversations.filter((item) => item.conversationType !== ConversationType.SYSTEM);
+const showMessageText = ref<string>('');
+
+const _conList = deepClone(uni.$RongKitStore.conversationStore.conversations.filter((item) => item.conversationType !== ConversationType.SYSTEM));
 
 const page = ref(0);
 
@@ -124,6 +128,11 @@ const sendForward = async () => {
 
 onMounted(() => {
   selectedMessages.value = uni.$RongKitStore.messageStore.getSelectedMessages();
+  if (selectedMessages.value.length > 0) {
+    const msg = selectedMessages.value[0];
+    showMessageText.value = `${msg.user?.nickname}: 
+    ${parseMessage2Text(msg.messageType, msg.content.content || '')}`;
+  }
   loadMore();
 });
 

@@ -1,4 +1,4 @@
-import { ref } from 'vue';
+import { ref } from '../../../../adapter-vue';
 
 /**
  * 音频管理器类
@@ -101,7 +101,9 @@ export class AudioManager {
   private resetAudioContext() {
     this.isPlaying.value = false;
     this.currentMessageId = '';
+    // #ifndef H5
     this.currentAudioContext.destroy();
+    // #endif
     this.currentAudioContext = null;
   }
 

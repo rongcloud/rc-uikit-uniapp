@@ -42,7 +42,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref } from 'vue';
+import { ref } from '../../../../adapter-vue';
 import RCIcon from '@/RCUIKit/components/rc-icon.vue';
 import { judgeIosPermission, requestAndroidPermission } from '@/RCUIKit/external/permission';
 import { sendMediaMessage } from '@/RCUIKit/utils/upload';

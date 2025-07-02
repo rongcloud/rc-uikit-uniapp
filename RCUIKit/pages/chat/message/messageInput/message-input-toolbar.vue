@@ -12,7 +12,7 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, computed } from 'vue';
+  import { ref, computed } from '../../../../adapter-vue';
   import ToolbarItem from './message-input-toolbar-item.vue';
   import {
  isApp, isH5, isWeixin, isAndroidApp, generateImageThumbnail, generateVideoThumbnail,

@@ -44,7 +44,7 @@
  * 注意事项：
  * - 此组件只能使用选项式 API, 使用组合式 API 时在小程序平台无法取到元素的坐标
  */
-import { PropType } from 'vue';
+import { PropType } from '../adapter-vue';
 import RCIcon from './rc-icon.vue';
 import { events } from '../constant/events';
 

@@ -14,7 +14,7 @@
 /**
 * 消息气泡组件
 */
-import { defineProps, ref, computed } from 'vue';
+import { defineProps, ref, computed } from '../../../adapter-vue';
 
 const props = defineProps({
   /**

@@ -9,7 +9,7 @@
 
 <script setup lang="ts">
 import { RCConnectionStatus } from '@rongcloud/imlib-next';
-import { ref } from 'vue';
+import { ref } from '../adapter-vue';
 import { reaction } from 'mobx';
 import RCIcon from '@/RCUIKit/components/rc-icon.vue';
 

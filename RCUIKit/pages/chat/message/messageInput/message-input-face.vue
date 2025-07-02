@@ -12,7 +12,7 @@
 /**
 * 表情组件
 */
-import { defineEmits } from 'vue';
+import { defineEmits } from '../../../../adapter-vue';
 
 const emit = defineEmits(['clickFace']);
 

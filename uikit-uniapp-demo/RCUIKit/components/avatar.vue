@@ -11,7 +11,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed } from '../adapter-vue';
 import rcicon from './rc-icon.vue';
 import { DEFAULT_GROUP_PORTRAIT_SVG } from '../assets/index';
 
@@ -67,11 +67,5 @@ const handleClick = () => {
 </script>
 
 <style scoped>
-.avatar-icon :deep(.icon-container) {
-  transition: opacity 0.3s;
-}
 
-.avatar-icon :deep(.icon-clickable:active) {
-  opacity: 0.8;
-}
 </style>

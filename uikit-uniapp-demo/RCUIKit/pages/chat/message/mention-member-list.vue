@@ -33,7 +33,7 @@
 */
 import {
  defineProps, defineEmits, ref, onUnmounted,
-} from 'vue';
+} from '../../../adapter-vue';
 import RCIcon from '@/RCUIKit/components/rc-icon.vue';
 import SelectMemberItem from '@/RCUIKit/pages/chat/message/select-member-item.vue';
 import { autorun } from 'mobx';

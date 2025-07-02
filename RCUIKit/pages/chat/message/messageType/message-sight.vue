@@ -1,5 +1,5 @@
 <template>
-  <message-item-common :message="message" @resend="resendMediaMessage(props.message.messageId!);" customResend>
+  <message-item-common :message="message" @resend="resendMediaMessage(props.message.messageId || 0);" customResend>
     <message-bubble :reverse="message.messageDirection === 1">
       <view class="rc-sight">
         <view class="video-message-container">
@@ -20,10 +20,10 @@
 /**
 * 视频消息组件
 */
-import { ref } from 'vue';
+import { ref } from '../../../../adapter-vue';
 import MessageItemCommon from '../message-item-common.vue';
 import RCIcon from '@/RCUIKit/components/rc-icon.vue';
-import { defineProps, PropType } from 'vue';
+import { defineProps, PropType } from '../../../../adapter-vue';
 import { MessageItemType } from '../message-item.vue';
 import { resendMediaMessage } from '@/RCUIKit/utils/upload';
 import { calcImageSize } from '@/RCUIKit/utils';

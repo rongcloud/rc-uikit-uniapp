@@ -25,7 +25,7 @@
 import {
   ref, onMounted, onUnmounted, PropType,
   nextTick,
-} from 'vue';
+} from '../../../adapter-vue';
 import MessageItem, { MessageItemType } from './message-item.vue';
 import { events } from '@/RCUIKit/constant/events';
 import {
@@ -83,20 +83,27 @@ const initStyle = () => {
 /**
  * 格式化消息
  */
-const formatMessage = (messages: IKitMessage[]): MessageItemType[] => messages.map((message, index) => {
-    const { messageId = 0, messageUId } = message;
-    const key = messageId?.toString() || messageUId || '';
-    if (index === 0) {
+const formatMessage = (messages: IKitMessage[]): MessageItemType[] => {
+	const messageIdList: number[] = [];
+	return messages.map((message, index) => {
+		const { messageId, messageUId } = message;
+		let key = messageUId;
+		if (messageId && !messageIdList.includes(messageId)) {
+			key = messageId.toString();
+			messageIdList.push(messageId);
+		}
+		if (index === 0) {
       return { ...message, isShowTime: true, key };
-    }
-    const { sentTime } = message;
-    const lastSentTime = messages[index - 1].sentTime;
-    const timeDifference = sentTime - lastSentTime;
-    if (timeDifference > 3 * 60 * 1000) {
+		}
+		const { sentTime } = message;
+		const lastSentTime = messages[index - 1].sentTime;
+		const timeDifference = sentTime - lastSentTime;
+		if (timeDifference > 3 * 60 * 1000) {
       return { ...message, isShowTime: true, key };
-    }
-    return { ...message, isShowTime: false, key };
-  });
+		}
+		return { ...message, isShowTime: false, key };
+   });
+};
 
 /**
  * 消息列表状态监听
@@ -174,7 +181,7 @@ const loadMore = async () => {
   if (lastMsg) {
     const index = messageList.value.findIndex((item) => item.key === lastMsg.key);
     if (index - 1 >= 0) {
-      scrollIntoView.value = messageList.value[index - 1].key;
+      scrollIntoView.value = messageList.value[index - 1].messageUId;
     } else {
       scrollIntoView.value = lastMsg.key;
     }

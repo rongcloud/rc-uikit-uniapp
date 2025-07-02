@@ -29,7 +29,7 @@
 /**
  * 视频消息组件
  */
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted } from '../../adapter-vue';
 import RCIcon from '@/RCUIKit/components/rc-icon.vue';
 import NavBar from '@/RCUIKit/components/nav-bar.vue';
 import { onLoad } from '@dcloudio/uni-app';

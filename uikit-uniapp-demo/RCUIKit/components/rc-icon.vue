@@ -15,7 +15,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, PropType } from 'vue';
+import { computed, PropType } from '../adapter-vue';
 import { iconType } from '../assets';
 import type { IconType } from '../assets';
 

@@ -1,5 +1,5 @@
 <template>
-  <message-item-common :message="message"  @resend="resendMediaMessage(props.message.messageId!);" customResend>
+  <message-item-common :message="message"  @resend="resendMediaMessage(props.message.messageId || 0);" customResend>
     <message-bubble :reverse="message.messageDirection === 1">
       <view class="rc-file" @click="handleFileClick">
         <view class="rc-file-icon">
@@ -23,7 +23,7 @@
 */
 import {
  computed, defineProps, PropType, ref,
-} from 'vue';
+} from '../../../../adapter-vue';
 import MessageItemCommon from '@/RCUIKit/pages/chat/message/message-item-common.vue';
 import RCIcon from '@/RCUIKit/components/rc-icon.vue';
 import MessageBubble from '@/RCUIKit/pages/chat/message/message-bubble.vue';

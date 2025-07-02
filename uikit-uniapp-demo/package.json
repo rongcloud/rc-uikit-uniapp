@@ -3,9 +3,9 @@
   "version": "0.0.0",
   "scripts": {},
   "dependencies": {
-    "@rongcloud/engine": "5.20.0-c-unikit.1",
-    "@rongcloud/imlib-next": "5.20.0-c-unikit.1",
-    "@rongcloud/imkit-store": "1.0.0",
+    "@rongcloud/engine": "^5.22.0",
+    "@rongcloud/imlib-next": "^5.22.0",
+    "@rongcloud/imkit-store": "1.0.1",
     "base-64": "^1.0.0",
     "mobx": "^6.13.7"
   }

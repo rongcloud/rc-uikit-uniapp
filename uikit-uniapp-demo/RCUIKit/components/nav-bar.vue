@@ -54,7 +54,7 @@
  */
   import {
     defineEmits, defineProps, computed, PropType,
-  } from 'vue';
+  } from '../adapter-vue';
   import RCIcon from './rc-icon.vue';
   import { IconType } from '../assets/index';
 

@@ -1,17 +1,17 @@
 <template>
   <view class="rc-input-container">
     <!-- 引用消息 -->
-    <view v-show="referenceMessage"  @touchmove.stop.prevent="() => {}">
+    <view v-show="referenceMessage"  @touchmove.stop.prevent="emptyFn">
       <view class="rc-reference">
         <view class="rc-reference-content">
-          回复 {{ referenceMessageInfo?.nickname }}: {{ referenceMessageInfo?.content }}
+          回复 {{ referenceMessageInfo }}
         </view>
         <RCIcon class="rc-reference-close" @click="resetReferenceMessage" clickable type="close":size="'20px'"/>
       </view>
     </view>
 
     <!-- 输入栏 -->
-    <view class="rc-input-wrap"  @touchmove.stop.prevent="() => {}">
+    <view class="rc-input-wrap"  @touchmove.stop.prevent="emptyFn">
       <!-- #ifndef WEB -->
       <RCIcon class="rc-input-sound"
          v-if="!inputStatus.isShowSoundBox"
@@ -102,21 +102,21 @@
 
     <!-- @消息选择用户面板 -->
     <UniPopup ref="mentionPanel" v-if="isGroup">
-      <MentionMemberList :groupId="openedConversation!.targetId"
+      <MentionMemberList :groupId="openedConId"
         @onClose="onSelectPannelCloseHandler"
         @onSelect="onSelectMember"
       />
     </UniPopup>
 
     <!-- 键盘弹起时用于占位顶起输入框 -->
-    <view class="rc-placeholder" :style="{height: paddingBottom + 'px'}" @touchmove.stop.prevent="() => {}"></view>
+    <view class="rc-placeholder" :style="{height: paddingBottom + 'px'}" @touchmove.stop.prevent="emptyFn"></view>
   </view>
 </template>
 
 <script setup lang="ts">
 import {
  ref, onUnmounted, onMounted, computed,
-} from 'vue';
+} from '../../../../adapter-vue';
 import { events } from '@/RCUIKit/constant/events';
 import { debounce, parseMessage2Text, throttle } from '@/RCUIKit/utils';
 import RCIcon from '@/RCUIKit/components/rc-icon.vue';
@@ -137,11 +137,13 @@ import { autorun } from 'mobx';
 
 const openedConversation = ref<IKitConversation | null>(null);
 const isGroup = ref<boolean>(false);
+const openedConId = ref<string>('');
 
 const openedConversationDisposer = autorun(() => {
   if (uni.$RongKitStore.conversationStore.openedConversation) {
     openedConversation.value = uni.$RongKitStore.conversationStore.openedConversation;
     isGroup.value = openedConversation.value.conversationType === ConversationType.GROUP;
+    openedConId.value = openedConversation.value.targetId;
   }
 });
 
@@ -203,6 +205,11 @@ const inputStatus = ref({
    */
   isShowExtraBox: false,
 });
+
+/**
+ * 空方法
+ */
+const emptyFn = () => {};
 
 /**
  * 切换输入框状态
@@ -337,6 +344,11 @@ const sendMessage = async () => {
   const data = generateMessage();
 
   uni.$emit(events.SCROLL_TO_BOTTOM);
+  // #ifndef VUE3
+  setTimeout(() => {
+    uni.$emit(events.SCROLL_TO_BOTTOM);
+  }, 300);
+  // #endif
 
   referenceMessage.value = null;
   text.value = '';
@@ -555,10 +567,8 @@ const referenceMessage = ref<IKitMessage | null>(null);
 const referenceMessageInfo = computed(() => {
   if (referenceMessage.value === null) return null;
 
-  return {
-    nickname: referenceMessage.value.user.nickname,
-    content: parseMessage2Text(referenceMessage.value.messageType, referenceMessage.value.content.content),
-  };
+  return `${referenceMessage.value.user.nickname}: 
+  ${parseMessage2Text(referenceMessage.value.messageType, referenceMessage.value.content.content)}`;
 });
 
 const onReferenceMessageHandler = (msg: IKitMessage) => {

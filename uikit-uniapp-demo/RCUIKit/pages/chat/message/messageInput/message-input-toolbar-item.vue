@@ -8,7 +8,7 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, computed } from 'vue';
+  import { ref, computed } from '../../../../adapter-vue';
   import RCIcon from '@/RCUIKit/components/rc-icon.vue';
 
   interface Props {

@@ -16,9 +16,15 @@
 </template>
 
 <script setup lang="ts">
+import { onShow } from '@dcloudio/uni-app';
 import ConnectStatus from '@/RCUIKit/components/connect-status.vue';
 import ConversationList from '@/RCUIKit/pages/conversation/conversation-list.vue';
 import NavBar from '@/RCUIKit/components/nav-bar.vue';
+
+const { conversationStore } = uni.$RongKitStore;
+onShow(() => {
+  conversationStore.openConversation(null);
+});
 
 </script>
 

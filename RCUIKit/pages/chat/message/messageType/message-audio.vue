@@ -1,11 +1,11 @@
 <template>
-  <message-item-common :message="message" @resend="resendMediaMessage(props.message.messageId!);" customResend>
+  <message-item-common :message="message" @resend="resendMediaMessage(props.message.messageId || 0);" customResend>
     <message-bubble :reverse="message.messageDirection === 1">
       <view :class="isMeSend ? 'rc-audio-out' : 'rc-audio-in'"
         :style="{ width: audioContainerWidth + 'px' }"
         @tap.stop.prevent="onPlayAudio"
       >
-        <view class="rc-audio-dur">{{ message.content.duration }}″</view>
+        <view class="rc-audio-dur">{{ message.content.duration}}″</view>
         <view :class="['rc-audio-icon-wrapper', isPlaying ? 'rc-audio-playing' : '']">
           <RCIcon v-if="isMeSend" type="voiceOut" />
           <RCIcon v-else type="voiceIn" />
@@ -22,7 +22,7 @@
 import MessageItemCommon from '../message-item-common.vue';
 import {
  defineProps, PropType, computed, ref, onUnmounted,
-} from 'vue';
+} from '../../../../adapter-vue';
 import { MessageItemType } from '../message-item.vue';
 import RCIcon from '@/RCUIKit/components/rc-icon.vue';
 import { MessageDirection } from '@rongcloud/imlib-next';
@@ -86,10 +86,6 @@ onUnmounted(() => {
   onStopAudio();
 });
 
-// 应用退到后台时停止播放
-uni.onAppHide(() => {
-  onStopAudio();
-});
 </script>
 
 <style lang="scss" scoped>

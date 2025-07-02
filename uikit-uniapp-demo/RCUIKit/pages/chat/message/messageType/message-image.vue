@@ -1,5 +1,5 @@
 <template>
-  <message-item-common :message="message"  @resend="resendMediaMessage(props.message.messageId!);" customResend>
+  <message-item-common :message="message"  @resend="resendMediaMessage(props.message.messageId || 0);" customResend>
     <view :class="['rc-image', isLoading ? '' : 'rc-image-bg']" :style="style" >
       <view v-if="isGIF && isLoading" class="loading-container">
         <view class="loading-spinner"></view>
@@ -16,7 +16,7 @@
 import MessageItemCommon from '@/RCUIKit/pages/chat/message/message-item-common.vue';
 import {
  defineProps, PropType, computed, ref, onMounted,
-} from 'vue';
+} from '../../../../adapter-vue';
 import { MessageItemType } from '@/RCUIKit/pages/chat/message/message-item.vue';
 import { MessageType } from '@rongcloud/imlib-next';
 import { resendMediaMessage } from '@/RCUIKit/utils/upload';

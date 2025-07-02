@@ -3,6 +3,7 @@
     class="rc-conversation-list"
     scroll-y
     @scrolltolower="loadMore"
+    :style="isH5() ? { height: listHeight } : {}"
   >
     <!-- 会话列表 -->
     <conversation-item
@@ -30,13 +31,13 @@
 import { onShow } from '@dcloudio/uni-app';
 import {
  ref, computed, onMounted, onUnmounted,
-} from 'vue';
+} from '../../adapter-vue';
 import { IKitConversation } from '@rongcloud/imkit-store';
 import ConversationItem from './conversation-item.vue';
 import rcicon from '@/RCUIKit/components/rc-icon.vue';
 import { deepClone, parseConversationName, generateDefaultAvatar } from '@/RCUIKit/utils';
 import { autorun } from 'mobx';
-import { calculateContentHeight } from '@/RCUIKit/utils';
+import { calculateContentHeight, isH5 } from '@/RCUIKit/utils';
 import { FIRST_SCREEN_COUNT } from '@/RCUIKit/constant';
 
 const { conversationStore } = uni.$RongKitStore;
@@ -74,10 +75,6 @@ const openedPopupItem = ref('');
 
 // 计算列表高度 仅在 web 平台生效
 const listHeight = computed(() => calculateContentHeight());
-
-onShow(() => {
-  conversationStore.openConversation(null);
-});
 
 onMounted(() => {
   // 获取会话列表

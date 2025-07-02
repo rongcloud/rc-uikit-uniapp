@@ -7,7 +7,7 @@
       },
     ]"
     @selectPopupItem="copyToClipboard"
-    @selectStatusChange="(data: boolean) => { isActive = data; }"
+    @selectStatusChange="selectStatusChange"
   >
     <message-bubble
       :reverse="message.messageDirection === 1"
@@ -44,7 +44,7 @@
 import MessageItemCommon from '../message-item-common.vue';
 import {
  defineProps, PropType, computed, ref, onUnmounted,
-} from 'vue';
+} from '../../../../adapter-vue';
 import MessageBubble from '../message-bubble.vue';
 import { MessageItemType } from '../message-item.vue';
 import UniLink from '@/RCUIKit/components/uni-components/uni-link/components/uni-link/uni-link.vue';
@@ -120,6 +120,10 @@ const copyToClipboard = () => {
   uni.setClipboardData({
     data: props.message.content.content,
   });
+};
+
+const selectStatusChange = (data: boolean) => {
+  isActive.value = data;
 };
 
 onUnmounted(() => {

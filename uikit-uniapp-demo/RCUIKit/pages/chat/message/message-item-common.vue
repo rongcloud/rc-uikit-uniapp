@@ -9,7 +9,7 @@
      {{ message.user.groupNickname || message.user.nickname || message.senderUserId }}
     </view>
     <view class="rc-common-info-content">
-      <long-press-popup :options="options" @select="handleSelect" @showStatusChange="(data: boolean) => { emit('selectStatusChange', data) }">
+      <long-press-popup :options="options" @select="handleSelect" @showStatusChange="showStatusChange">
         <slot/>
       </long-press-popup>
     </view>
@@ -30,7 +30,7 @@
  */
 import {
  defineProps, PropType, computed, defineEmits,
-} from 'vue';
+} from '../../../adapter-vue';
 import Avatar from '@/RCUIKit/components/avatar.vue';
 import RCIcon from '@/RCUIKit/components/rc-icon.vue';
 import { MessageItemType } from './message-item.vue';
@@ -115,6 +115,10 @@ const options = computed(() => {
   }
   return list;
 });
+
+const showStatusChange = (data: boolean) => {
+  emit('selectStatusChange', data);
+};
 
 /**
  * 引用消息
