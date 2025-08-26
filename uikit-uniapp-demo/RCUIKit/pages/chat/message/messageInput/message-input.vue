@@ -14,14 +14,14 @@
     <view class="rc-input-wrap"  @touchmove.stop.prevent="emptyFn">
       <!-- #ifndef WEB -->
       <RCIcon class="rc-input-sound"
-         v-if="!inputStatus.isShowSoundBox"
+        v-show="inputStatus.isShowInputBox"
         @click="showVoiceRecorder"
         type="soundBtn"
         clickable
         :size="'28px'"
         />
       <RCIcon class="rc-input-keyboard"
-        v-show="inputStatus.isShowSoundBox"
+        v-show="!inputStatus.isShowInputBox"
         @click="switchInput(['isShowInputBox'])"
         type="keyboard"
         clickable
@@ -64,7 +64,12 @@
           ></view>
       </view>
 
+      <!-- #ifdef MP-TOUTIAO -->
+      <VoiceRecorderToutiao v-show="inputStatus.isShowSoundBox" style="flex: 1;"/>
+      <!-- #endif -->
+      <!-- #ifndef MP-TOUTIAO -->
       <VoiceRecorder v-if="inputStatus.isShowSoundBox" style="flex: 1;"/>
+      <!-- #endif -->
 
       <view class="rc-input-right">
         <RCIcon class="rc-input-face"
@@ -131,6 +136,7 @@ BaseMessage,
 } from '@rongcloud/imlib-next';
 import MessageInputFace from './message-input-face.vue';
 import VoiceRecorder from './message-input-voice-recorder.vue';
+import VoiceRecorderToutiao from './message-input-voice-recorder-toutiao.vue';
 import { LogTag } from '@/RCUIKit/enum/logTag';
 import { logger } from '@/RCUIKit/utils/logger';
 import { autorun } from 'mobx';
@@ -150,7 +156,15 @@ const openedConversationDisposer = autorun(() => {
 /**
  * 底部安全区高度
  */
-const bottomInsetsHeight = uni.getWindowInfo().safeAreaInsets.bottom;
+let bottomInsetsHeight = 30;
+// #ifdef MP-TOUTIAO
+const systomInfo = uni.getSystemInfoSync();
+bottomInsetsHeight = systomInfo.screenHeight - systomInfo.safeArea!.bottom;
+// bottomInsetsHeight = tt.getSystemInfoSync().safeArea.height 抖音平台取到的值不对，先固定写死
+// #endif
+// #ifndef MP-TOUTIAO
+bottomInsetsHeight = uni.getWindowInfo().safeAreaInsets.bottom;
+// #endif
 
 /**
  * 解决两个问题：
@@ -164,7 +178,16 @@ onMounted(() => {
   uni.$on(events.RESET_MESSAGE_INPUT, resetMessageInputStatus);
   uni.$on(events.RECALL_MESSAGE, onRecallMessage);
   addEventListener(Events.MESSAGES, onReceiveMessage);
-  initDraft();
+
+  // #ifndef MP-TOUTIAO
+    initDraft();
+  // #endif
+  // #ifdef MP-TOUTIAO
+  // 抖音平台，初始化草稿时，需要延迟 100ms，否则会导致安卓平台输入框高度没有自动计算
+    setTimeout(() => {
+      initDraft();
+    }, 100);
+  // #endif
 });
 
 /**
@@ -232,27 +255,29 @@ const switchInput = (key: (keyof typeof inputStatus.value)[]) => {
 };
 
 const showFaceBox = () => {
+  inputFocus.value = false;
   // 延迟 100ms, 防止由键盘切换到表情面板时，表情面板有弹起抖动
   setTimeout(() => {
     switchInput(['isShowFaceBox', 'isShowInputBox']);
-  }, 100);
+  }, 200);
 };
 
 const showVoiceRecorder = () => {
   // 延迟 200ms, 防止同位置的两个按钮（录音icon和键盘icon）的点击事件同时被触发
   setTimeout(() => {
-    switchInput(['isShowSoundBox']);
+	switchInput(['isShowSoundBox']);
   }, 200);
 };
 
 const switchExtraBox = () => {
+  inputFocus.value = false;
   setTimeout(() => {
     if (inputStatus.value.isShowExtraBox) {
       switchInput(['isShowInputBox']);
     } else {
       switchInput(['isShowExtraBox', 'isShowInputBox']);
     }
-  }, 100);
+  }, 200);
 };
 
 /**
@@ -307,7 +332,7 @@ const updateFocusValue = debounce((val: boolean) => {
  */
 const onKeyboardHeightChangeHandler = (e: any) => {
   let { height } = e.detail;
-  // #ifdef MP-WEIXIN
+  // #ifdef MP-WEIXIN || MP-TOUTIAO
     if (height) {
       // 当从表情面板切换到输入文字时，键盘高度变更事件快于获取焦点事件，会导致输入框有个向上弹起的现象，所以要主动把表情面板关掉
       switchInput(['isShowInputBox']);
@@ -358,6 +383,12 @@ const sendMessage = async () => {
   const { code } = await uni.$RongKitStore.messageStore.sendMessage(openedConversation.value.key, data.message, {
     isMentioned: data.isMentioned,
   });
+
+  // #ifdef MP-TOUTIAO
+  setTimeout(() => {
+    uni.$emit(events.SCROLL_TO_BOTTOM);
+  }, 500);
+  // #endif
 
   if (code !== ErrorCode.SUCCESS) {
     uni.showToast({
@@ -479,6 +510,10 @@ const inputHandler = (e: any) => {
  * 对输入的 key 进行特殊处理
  */
 const onInputKeyHandler = (e: any) => {
+  if (e.detail.value[e.detail.cursor - 1] === '\n') {
+    sendMessage();
+    return;
+  }
   if (!isGroup.value) {
     return;
   }

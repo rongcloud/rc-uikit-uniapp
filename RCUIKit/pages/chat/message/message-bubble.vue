@@ -14,7 +14,9 @@
 /**
 * 消息气泡组件
 */
-import { defineProps, ref, computed } from '../../../adapter-vue';
+import {
+ defineProps, ref, computed, onMounted, defineEmits,
+} from '../../../adapter-vue';
 
 const props = defineProps({
   /**
@@ -40,6 +42,12 @@ const props = defineProps({
   },
 });
 
+const emit = defineEmits<{(e: 'myMounted'): void
+}>();
+
+onMounted(() => {
+  emit('myMounted');
+});
 const className = ref(props.reverse ? 'rc-bubble-reverse-bg' : 'rc-bubble-bg');
 </script>
 

@@ -244,7 +244,13 @@ recorderManager.onStop(async (res) => {
       duration,
     });
 
-    uni.$emit(events.SCROLL_TO_BOTTOM);
+	uni.$emit(events.SCROLL_TO_BOTTOM);
+	// #ifdef MP-TOUTIAO
+	setTimeout(() => {
+		uni.$emit(events.SCROLL_TO_BOTTOM);
+	}, 50);
+	// #endif
+
     const { code } = await sendMediaMessage({
       message: hqVoiceMessage,
       conversationKey: uni.$RongKitStore.conversationStore.openedConversation!.key,

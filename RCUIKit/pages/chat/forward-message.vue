@@ -1,5 +1,6 @@
 <template>
   <view class="rc-forward">
+	<!-- #ifndef MP-TOUTIAO -->
     <NavBar title="选择一个聊天" >
       <template v-slot:left>
         <RCIcon type="left" clickable @click="backToChat"/>
@@ -10,7 +11,7 @@
         </view>
       </template>
     </NavBar>
-
+	<!-- #endif -->
     <view class="rc-list">
       <scroll-view class="rc-list-scroll" scroll-y @scrolltolower="loadMore">
         <SelectMemberItem

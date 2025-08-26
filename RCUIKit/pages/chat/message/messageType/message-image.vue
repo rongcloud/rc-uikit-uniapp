@@ -1,5 +1,10 @@
 <template>
-  <message-item-common :message="message"  @resend="resendMediaMessage(props.message.messageId || 0);" customResend>
+  <message-item-common
+    v-show="isShow"
+    @myMounted="isShow = true"
+    :message="message"
+    @resend="resendMediaMessage(props.message.messageId || 0);"
+    customResend>
     <view :class="['rc-image', isLoading ? '' : 'rc-image-bg']" :style="style" >
       <view v-if="isGIF && isLoading" class="loading-container">
         <view class="loading-spinner"></view>
@@ -37,6 +42,12 @@ const emit = defineEmits<{(e: 'image-click', uri: string): void
 const style = ref(`width: 100px; height: ${IMAGE_THUMBNAIL_MAX_SHOW_SIZE}px;`);
 const isLoading = ref(true);
 const isGIF = props.message.messageType === MessageType.GIF;
+
+// 解决头条小程序平台多层组件嵌套时，组件生命周期乱序导致子组件渲染延迟问题，表现为渲染卡顿
+const isShow = ref(true);
+// #ifdef MP-TOUTIAO
+isShow.value = false;
+// #endif
 
 onMounted(() => {
   if (isGIF) {

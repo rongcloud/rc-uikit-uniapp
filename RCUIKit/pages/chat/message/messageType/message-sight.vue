@@ -1,6 +1,8 @@
 <template>
-  <message-item-common :message="message" @resend="resendMediaMessage(props.message.messageId || 0);" customResend>
-    <message-bubble :reverse="message.messageDirection === 1">
+  <message-item-common
+    v-show="isShow"
+	:message="message" @resend="resendMediaMessage(props.message.messageId || 0);" customResend>
+    <message-bubble :reverse="message.messageDirection === 1" @myMounted="isShow = true">
       <view class="rc-sight">
         <view class="video-message-container">
           <!-- 缩略图展示 -->
@@ -40,6 +42,12 @@ const props = defineProps({
 const style = ref('');
 const isPlaying = ref(false);
 const base64 = `data:image/jpeg;base64,${props.message.content.content}`;
+
+// 解决头条小程序平台多层组件嵌套时，组件生命周期乱序导致子组件渲染延迟问题，表现为渲染卡顿
+const isShow = ref(true);
+// #ifdef MP-TOUTIAO
+isShow.value = false;
+// #endif
 
 // 图片加载完成，计算图片宽高，宽高超过 IMAGE_THUMBNAIL_MAX_SHOW_SIZE 时，按 IMAGE_THUMBNAIL_MAX_SHOW_SIZE 计算
 const onLoad = (e: any) => {

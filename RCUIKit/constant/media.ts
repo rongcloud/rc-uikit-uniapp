@@ -2,7 +2,8 @@
 export const IMAGE_THUMBNAIL_CONFIG = {
   MAX_HEIGHT: 240, // 最大高度
   MAX_WIDTH: 240, // 最大宽度
-  DEFAULT_QUALITY: 1, // 默认质量，如超出消息大小限制，则会自动降低质量
+  DEFAULT_QUALITY_WEB: 1, // 默认质量，如超出消息大小限制，则会自动降低质量
+  DEFAULT_QUALITY: 80, // 默认质量，如超出消息大小限制，则会自动降低质量
   DEFAULT_SCALE: 1, // 默认缩放比例
   MIN_QUALITY: 0.1, // 最小质量
   TIMEOUT: 10000, // 10秒超时

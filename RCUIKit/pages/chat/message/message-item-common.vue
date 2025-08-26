@@ -17,8 +17,8 @@
 
   <!-- 消息发送状态 -->
   <view class="rc-common-send-status" v-if="message.messageDirection === 1">
-    <RCIcon v-if="message.sentStatus === SentStatus.SENDING" type="sending" :spin="true" :size="32"/>
-    <RCIcon v-else-if="message.sentStatus === SentStatus.FAILED" type="sendError":size="32" @click="resendMessage" clickable/>
+    <RCIcon v-if="message.sentStatus === SentStatus.SENDING" type="sending" :spin="true" :size="40"/>
+    <RCIcon v-else-if="message.sentStatus === SentStatus.FAILED" type="sendError":size="40" @click="resendMessage" clickable/>
   </view>
 
 </view>
@@ -29,7 +29,7 @@
  * 常规消息容器组件
  */
 import {
- defineProps, PropType, computed, defineEmits,
+ defineProps, PropType, computed, defineEmits, onMounted,
 } from '../../../adapter-vue';
 import Avatar from '@/RCUIKit/components/avatar.vue';
 import RCIcon from '@/RCUIKit/components/rc-icon.vue';
@@ -78,8 +78,12 @@ const emit = defineEmits({
    * 重发消息
    */
   resend: () => true,
+  myMounted: () => true,
 });
 
+onMounted(() => {
+	emit('myMounted');
+});
 const portrait = computed(() => {
   switch (props.message.conversationType) {
     case ConversationType.SYSTEM:

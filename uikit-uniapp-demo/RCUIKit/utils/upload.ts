@@ -20,7 +20,6 @@ class RCUniUploadRequest extends AKitUploadRequest {
     }
 
     const formData = this._requestData.body;
-
     return new Promise((resolve) => {
       this._uniUploadTask = uni.uploadFile({
         url: this._requestData!.url,

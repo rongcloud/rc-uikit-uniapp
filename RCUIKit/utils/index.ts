@@ -2,6 +2,8 @@ import { IKitConversation } from '@rongcloud/imkit-store';
 import { DEFAULT_GROUP_PORTRAIT_SVG, DEFAULT_USER_PORTRAIT_SVG, DEFAULT_SYSTEM_PORTRAIT_SVG } from '../assets/index';
 import { MessageType } from '@rongcloud/imlib-next';
 import { IMAGE_THUMBNAIL_MAX_SHOW_SIZE } from '../constant';
+import { logger } from './logger';
+import { LogTag } from '../enum/logTag';
 
 export {
   getFileName,
@@ -201,6 +203,12 @@ export const isApp = () => platform === 'app';
 
 export const isWeixin = () => platform === 'mp-weixin';
 
+export const isToutiao = () => platform === 'mp-toutiao';
+
+export const isKuaishou = () => platform === 'mp-kuaishou';
+
+export const isMiniProgram = () => isWeixin() || isToutiao() || isKuaishou();
+
 export const isAndroidApp = () => systemInfo.osName === 'android' && isApp();
 
 export const uniRuntimeVersion = () => systemInfo.uniRuntimeVersion;
@@ -209,7 +217,7 @@ export const parseMessage2Text = (messageType: string, content: string = ''): st
   switch (messageType) {
     case MessageType.TEXT:
     case MessageType.REFERENCE:
-      return content.trim();
+      return trimStrWithEnter(content.trim());
     case MessageType.IMAGE:
     case MessageType.GIF:
       return '[图片]';
@@ -227,6 +235,15 @@ export const parseMessage2Text = (messageType: string, content: string = ''): st
     default:
       return '[未知消息]';
   }
+};
+
+// 如果字符串中有换行，则取出换行前的内容
+export const trimStrWithEnter = (str: string) => {
+  // 匹配从字符串开头到第一个换行符(\n)或回车换行(\r\n)之前的所有字符
+  const regex = /^.*?(?=\r?\n)/;
+  const match = str.match(regex);
+  // 如果有匹配结果则返回，否则返回原字符串
+  return match ? match[0] : str;
 };
 
 // 计算内容区域高度
@@ -297,4 +314,44 @@ export const versionCompare = (v1: string, v2: string) => {
     }
   }
   return 0;
+};
+
+/**
+ * 获取授权设置
+ * @param scope 授权范围
+ * @returns 授权状态，undefined 代表无法获取授权状态，true 代表授权，false 代表未授权
+ */
+export const getAuthSetting = (scope: string): Promise<boolean | undefined> => new Promise((resolve) => {
+      uni.getSetting({
+        success(res) {
+          resolve(res.authSetting[`scope.${scope}` as keyof UniApp.AuthSetting]);
+        },
+        fail() {
+          resolve(undefined);
+        },
+      });
+    });
+
+/**
+ * 显示打开设置弹窗
+ * @param str 提示文案
+ */
+export const showOpenSettingModal = (str: string) => {
+  uni.showModal({
+      title: '提示',
+      content: `您需要打开${str}权限`,
+      confirmText: '去设置',
+      showCancel: true,
+      success(res) {
+        if (res.confirm) {
+          uni.openSetting({
+            success: (settingRes) => {
+              // 可在此处根据最新权限状态决定是否继续录音
+            },
+            fail: (err) => {
+            },
+          });
+        }
+      },
+    });
 };

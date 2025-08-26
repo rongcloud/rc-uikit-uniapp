@@ -1,6 +1,7 @@
 <template>
   <view class="rc-conversations">
       <!-- 导航栏 -->
+    <!-- #ifndef MP-TOUTIAO -->
       <nav-bar :border="true" :leftWidth="100">
       <template v-slot:left>
         <view class="rc-conversations-nav-text">
@@ -8,6 +9,7 @@
         </view>
       </template>
     </nav-bar>
+    <!-- #endif -->
     <connect-status />
     <view class="rc-conversations-list">
       <conversation-list />
@@ -26,6 +28,11 @@ onShow(() => {
   conversationStore.openConversation(null);
 });
 
+// #ifdef MP-TOUTIAO
+uni.setNavigationBarTitle({
+  title: '会话',
+});
+// #endif
 </script>
 
 <style lang="scss">
@@ -42,7 +49,7 @@ onShow(() => {
   height: 100%;
   /* #endif */
 
-  /* #ifdef MP-WEIXIN */
+  /* #ifdef MP */
   height: 100vh;
   /* #endif */
 

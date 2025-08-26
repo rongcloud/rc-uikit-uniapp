@@ -2,7 +2,10 @@ import { ErrorCode, MessageType } from '@rongcloud/imlib-next';
 import { IAsyncRes, MAX_MESSAGE_CONTENT_BYTES } from '@rongcloud/engine';
 import { IKitThumbnailConfig, IKitImageInfo } from '@rongcloud/imkit-store';
 import { IMAGE_THUMBNAIL_CONFIG } from '../constant/media';
-import { isH5, isApp, isWeixin } from './index';
+import {
+ isH5, isApp, isMiniProgram,
+ isToutiao,
+} from './index';
 
 type ResolveFunc = (value: IAsyncRes<IKitImageInfo>) => void;
 
@@ -83,7 +86,11 @@ export const calculateImageSize = (
 export const generateImageThumbnail = (file?: File, filePath?: string, config?: IKitThumbnailConfig) : Promise<IAsyncRes<IKitImageInfo>> => {
   if (isH5() && file) {
     return getImageThumbnailWithFile(file!, config);
-  } if (filePath) {
+  }
+  if (isToutiao() && filePath) {
+    return getThumbailInToutiao(filePath, config);
+  }
+  if (filePath) {
     return generateImageThumbnailWithPath(filePath, config);
   }
   return Promise.resolve({
@@ -102,6 +109,9 @@ export const generateImageThumbnail = (file?: File, filePath?: string, config?: 
 export const generateVideoThumbnail = (videoFile?: File, path?: string, config?: IKitThumbnailConfig): Promise<IAsyncRes<IKitImageInfo>> => {
   if (isH5() && videoFile) {
     return generateVideoThumbnailWithFile(videoFile, config);
+  }
+  if (isToutiao()) {
+    return generateVideoThumbnailInToutiao();
   }
   if (!isH5() && path) {
     return generateImageThumbnailWithPath(path, config);
@@ -164,10 +174,17 @@ export async function getImageInfo(file?: File, filePath?: string): Promise<IAsy
       };
     }
 
+    // #ifdef MP-TOUTIAO
+    if (imageInfo.path.endsWith('.gif')) {
+      imageInfo.type = 'image/gif';
+    }
+    // #endif
+
     let thumbnail = '';
+
     // gif 图片不生成缩略图
     if (imageInfo.type !== 'image/gif' && imageInfo.type !== 'gif') {
-      if (isWeixin()) {
+      if (isMiniProgram()) {
         const base64Res = await readImageBase64Weixin(filePath);
         if (base64Res.code === ErrorCode.SUCCESS) {
           thumbnail = base64Res.data?.thumbnail || '';
@@ -226,7 +243,7 @@ const getFile = (path : string): Promise<File | undefined> => new Promise((resol
  */
 async function getFileInfo(tempFilePath: string): Promise<IAsyncRes<{size: number, file?: any}>> {
   try {
-    if (isWeixin()) {
+    if (isMiniProgram()) {
       const fileManager = uni.getFileSystemManager();
       if (!fileManager) {
         return {
@@ -482,7 +499,7 @@ const compressImageWithPath = async (filePath: string, config: {
     const result = await new Promise<UniNamespace.CompressImageSuccessResult>((resolve, reject) => {
       uni.compressImage({
         src: filePath,
-        quality: config.quality * 100,
+        quality: config.quality,
         compressedWidth: config.compressedWidth,
         compressedHeight: config.compressedHeight,
         success: resolve,
@@ -541,7 +558,7 @@ const getThumbnailWithPath = async (
   }
 
   // 计算新的压缩质量
-  const newQuality = config.quality - 0.1;
+  const newQuality = generateNextQuality(config.quality);
   if (newQuality <= IMAGE_THUMBNAIL_CONFIG.MIN_QUALITY) {
     return {
       code: ErrorCode.INVALID_PARAMETER_MEDIA_URL,
@@ -550,12 +567,19 @@ const getThumbnailWithPath = async (
   }
   // 递归检查压缩结果
   return getThumbnailWithPath(
-    compressedFilePath,
+    filePath,
     {
       ...config,
       quality: newQuality,
     },
   );
+};
+
+const generateNextQuality = (quality: number) => {
+  if (quality > 10) {
+    return quality - 10;
+  }
+  return Math.floor(quality / 2);
 };
 
 /**
@@ -597,7 +621,7 @@ const generateImageThumbnailWithPath = async (filePath: string, config?: IKitThu
     const { tempFilePath: compressedFilePath } = compressResult.data;
 
     // 读取压缩后的图片数据
-    if (isWeixin()) {
+    if (isMiniProgram()) {
       return readImageBase64Weixin(compressedFilePath);
     }
 
@@ -631,7 +655,7 @@ const getImageThumbnailWithFile = (file: File, config?: IKitThumbnailConfig) : P
   let {
     maxHeight = IMAGE_THUMBNAIL_CONFIG.MAX_HEIGHT,
     maxWidth = IMAGE_THUMBNAIL_CONFIG.MAX_WIDTH,
-    quality = IMAGE_THUMBNAIL_CONFIG.DEFAULT_QUALITY,
+    quality = IMAGE_THUMBNAIL_CONFIG.DEFAULT_QUALITY_WEB,
     scale = IMAGE_THUMBNAIL_CONFIG.DEFAULT_SCALE,
   } = config || {};
 
@@ -745,6 +769,60 @@ const calcPosition = (width: number, height: number, opts: {
     };
   };
   return _scale > scale ? gtScale() : ltScale();
+};
+
+/**
+ * 头条小程序获取缩略图
+ * @param filePath 图片文件路径
+ * @param config 缩略图配置
+ * @returns 包含缩略图数据的Promise
+ */
+const getThumbailInToutiao = (filePath: string, config?: IKitThumbnailConfig) : Promise<IAsyncRes<IKitImageInfo>> => {
+  let {
+      maxHeight = IMAGE_THUMBNAIL_CONFIG.MAX_HEIGHT,
+      maxWidth = IMAGE_THUMBNAIL_CONFIG.MAX_WIDTH,
+      quality = IMAGE_THUMBNAIL_CONFIG.DEFAULT_QUALITY_WEB,
+      scale = IMAGE_THUMBNAIL_CONFIG.DEFAULT_SCALE,
+    } = config || {};
+
+  const query = tt.createSelectorQuery();
+
+  const _promise = new Promise<IAsyncRes<IKitImageInfo>>((resolve) => {
+    query.select('#rc-canvas-help').node(
+    (res: any) => {
+      const canvas = res.node;
+      const ctx = canvas.getContext('2d');
+      const img = canvas.createImage();
+      img.src = filePath;
+      img.onload = () => {
+        const pos = calcPosition(img.width, img.height, {
+          maxHeight,
+          maxWidth,
+          scale,
+        });
+        canvas.width = Math.min(pos.w, maxWidth);
+        canvas.height = Math.min(pos.h, maxHeight);
+        ctx.drawImage(img, pos.x, pos.y, pos.w, pos.h);
+
+        let base64 = getThumbailBase64(canvas, quality);
+        const reg = /data:image\/[^;]+;base64,/;
+        base64 = base64.replace(reg, '');
+
+        resolve({
+          code: ErrorCode.SUCCESS,
+          data: {
+            thumbnail: base64,
+          },
+        });
+      };
+      img.onerror = (err: any) => {
+        console.error('图片加载失败:', err);
+      };
+    },
+  ).exec();
+  });
+
+  return _promise;
 };
 
 /**
@@ -890,4 +968,41 @@ const generateVideoThumbnailWithFile = (videoFile: File, options?: IKitThumbnail
     // 设置视频源
     video.src = URL.createObjectURL(videoFile);
   });
+};
+
+/**
+ * 抖音小程序获取缩略图
+ * @param filePath 视频文件路径
+ * @param options 缩略图配置
+ * @returns 包含缩略图数据的Promise
+ * 目前抖音小程序不支持获取视频缩略图，所以返回一个固定的缩略图
+ */
+const generateVideoThumbnailInToutiao = (): Promise<IAsyncRes<IKitImageInfo>> => {
+  const query = tt.createSelectorQuery();
+
+  const _promise = new Promise<IAsyncRes<IKitImageInfo>>((resolve) => {
+    query.select('#rc-canvas-help').node(
+    (res: any) => {
+      const canvas = res.node;
+      const ctx = canvas.getContext('2d');
+      canvas.width = 100;
+      canvas.height = 100;
+      // 绘制一个矩形
+      ctx.fillStyle = '#808080';
+      ctx.fillRect(0, 0, 100, 100);
+
+      let base64 = getThumbailBase64(canvas, 0.1);
+      const reg = /data:image\/[^;]+;base64,/;
+      base64 = base64.replace(reg, '');
+      resolve({
+        code: ErrorCode.SUCCESS,
+        data: {
+          thumbnail: base64,
+        },
+      });
+    },
+  ).exec();
+  });
+
+  return _promise;
 };

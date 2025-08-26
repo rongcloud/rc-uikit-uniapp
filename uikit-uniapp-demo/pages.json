@@ -4,15 +4,25 @@
 			// 会话列表页
 			"path": "RCUIKit/pages/conversation/index",
 			"style": {
-				"navigationStyle": "custom"
+				// #ifndef MP-TOUTIAO
+				"navigationStyle": "custom",
+				// #endif
+				
+				// #ifdef MP-TOUTIAO 
+				"navigationBarTitleText": "会话"
+				// #endif 
 			}
 		},
 		{
 			// 会话页
 			"path": "RCUIKit/pages/chat/index",
 			"style": {
-				"navigationBarTitleText": "uni-uikit-demo",
+				// #ifndef MP-TOUTIAO
 				"navigationStyle": "custom",
+				// #endif
+				// #ifdef MP-TOUTIAO 
+				"navigationBarTitleText": ""
+				// #endif 
         "app-plus": {
           "bounce": "none"
         }
@@ -22,14 +32,21 @@
 			// 转发消息页
 			"path": "RCUIKit/pages/chat/forward-message",
 			"style": {
-				"navigationStyle": "custom"
+				// #ifndef MP-TOUTIAO
+				"navigationStyle": "custom",
+				// #endif
+				// #ifdef MP-TOUTIAO 
+				"navigationBarTitleText": "转发"
+				// #endif 
 			}
 		},
 		{
 			// 视频播放页
 			"path": "RCUIKit/pages/chat/video-play",
 			"style": {
+				// #ifndef MP-TOUTIAO
 				"navigationStyle": "custom"
+				// #endif
 			}
 		}
 	],

@@ -8,11 +8,13 @@
     ]"
     @selectPopupItem="copyToClipboard"
     @selectStatusChange="selectStatusChange"
+    v-show="isShow"
   >
     <message-bubble
       :reverse="message.messageDirection === 1"
       :isCenter="message.messageType === MessageType.TEXT && message.content.content.length < 6"
       :active="isActive"
+      @myMounted="isShow = true"
     >
       <view class="rc-reference" v-if="message.messageType === MessageType.REFERENCE">
         <view class="rc-reference-content" :class="{inverse: message.messageDirection === 1 }">
@@ -43,7 +45,7 @@
 */
 import MessageItemCommon from '../message-item-common.vue';
 import {
- defineProps, PropType, computed, ref, onUnmounted,
+ defineProps, PropType, computed, ref, onUnmounted, onMounted,
 } from '../../../../adapter-vue';
 import MessageBubble from '../message-bubble.vue';
 import { MessageItemType } from '../message-item.vue';
@@ -66,6 +68,12 @@ const props = defineProps({
 const messageObjList = computed(() => parseMessageContent(props.message.content.content));
 
 const isActive = ref(false);
+
+// 解决头条小程序平台多层组件嵌套时，组件生命周期乱序导致子组件渲染延迟问题，表现为渲染卡顿
+const isShow = ref(true);
+// #ifdef MP-TOUTIAO
+isShow.value = false;
+// #endif
 
 /**
  * 解析消息内容，将文本、链接和 提及分开

@@ -21,7 +21,8 @@
 
     <!-- 弹框内容 -->
     <view
-      v-if="showPopup"
+	v-if="addPopup"
+      v-show="showPopup"
       class="rc-long-press-popup-content"
       :style="popupStyle"
       @click.stop
@@ -76,6 +77,7 @@ export default {
   data() {
     return {
       showPopup: false,
+      addPopup: false,
       popupPosition: {
         x: 0,
         y: 0,
@@ -182,10 +184,27 @@ export default {
         this.touchPosition = { x: clientX, y: clientY };
 
         // 获取系统信息
-        const systemInfo = uni.getWindowInfo();
-        const {
-          windowWidth, windowHeight, screenHeight, windowBottom,
-        } = systemInfo;
+        let windowWidth;
+        let windowHeight;
+        let screenHeight;
+        let bottomInsetsHeight;
+        let topInsetsHeight;
+        // #ifdef MP-TOUTIAO
+        const systomInfo = uni.getSystemInfoSync();
+        windowWidth = systomInfo.windowWidth;
+        windowHeight = systomInfo.windowHeight;
+        screenHeight = systomInfo.screenHeight;
+        bottomInsetsHeight = systomInfo.screenHeight - systomInfo.safeArea!.bottom + 56; // 底部安全区高度, 56 是输入框高度
+        topInsetsHeight = 0; // 顶部导航栏高度, 抖音小程序未使用自定义导航栏
+        // #endif
+        // #ifdef MP-WEIXIN || APP-PLUS || WEB
+        const windowInfo = uni.getWindowInfo();
+        windowWidth = windowInfo.windowWidth;
+        windowHeight = windowInfo.windowHeight;
+        screenHeight = windowInfo.screenHeight;
+        bottomInsetsHeight = windowInfo.safeAreaInsets.bottom + 56; // 底部安全区高度, 56 是输入框高度
+        topInsetsHeight = windowInfo.safeAreaInsets.top; // 顶部导航栏高度
+        // #endif
         const data = await new Promise<any>((resolve) => {
           uni.createSelectorQuery()
             .in(this)
@@ -199,11 +218,9 @@ export default {
 
         const popupWidth = 160;
         const popupHeight = itemHeight * this.options.length + padding * 2; // 弹框高度
-        const bottomInsetsHeight = uni.getWindowInfo().safeAreaInsets.bottom + 56; // 底部安全区高度, 56 是输入框高度
         // #ifdef MP-WEIXIN
         this.maskStyle = { top: `${0 - top}px`, bottom: `${bottom - screenHeight + bottomInsetsHeight}px` };
         // #endif
-        const topInsetsHeight = uni.getWindowInfo().safeAreaInsets.top; // 顶部导航栏高度
 
         // 由于小程序平台，在 scroll-view 中子元素使用 fixed 定位时是相对于 scroll-view 的，而不是屏幕，所以这里使用 absolute 定位
         if (this.position === 'touch') {
@@ -252,8 +269,11 @@ export default {
           }
           this.popupPosition = { x, y };
         }
-        this.showPopup = true;
-        this.$emit('showStatusChange', true);
+		this.addPopup = true;
+		setTimeout(() => {
+			this.showPopup = true;
+			this.$emit('showStatusChange', true);
+		}, 10);
 
         setTimeout(() => {
           this.isLongPress = false;

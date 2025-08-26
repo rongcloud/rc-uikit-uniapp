@@ -1,6 +1,10 @@
 <template>
-  <message-item-common :message="message"  @resend="resendMediaMessage(props.message.messageId || 0);" customResend>
-    <message-bubble :reverse="message.messageDirection === 1">
+  <message-item-common
+    v-show="isShow"
+    :message="message"
+    @resend="resendMediaMessage(props.message.messageId || 0);"
+    customResend>
+    <message-bubble :reverse="message.messageDirection === 1" @myMounted="isShow = true">
       <view class="rc-file" @click="handleFileClick">
         <view class="rc-file-icon">
           <RCIcon :type="message.messageDirection === 1 ? 'fileIn' : 'fileOut'" :size="72" />
@@ -52,6 +56,12 @@ const downloadStatus = ref('');
 const cachedFilePath = ref('');
 // 下载任务实例
 const downloadTask = ref<UniApp.DownloadTask | null>(null);
+
+// 解决头条小程序平台多层组件嵌套时，组件生命周期乱序导致子组件渲染延迟问题，表现为渲染卡顿
+const isShow = ref(true);
+// #ifdef MP-TOUTIAO
+isShow.value = false;
+// #endif
 
 const downloadStatusColor = computed(() => {
   const bgColor = props.message.messageDirection === 1 ? '#FFFFFF' : '#C6CBD7';

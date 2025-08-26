@@ -40,7 +40,7 @@ import { IKitConversation } from '@rongcloud/imkit-store';
 import badge from '@/RCUIKit/components/badge.vue';
 import avatar from '@/RCUIKit/components/avatar.vue';
 import rcicon from '@/RCUIKit/components/rc-icon.vue';
-import { formatTime, parseMessage2Text } from '@/RCUIKit/utils/index';
+import { formatTime, parseMessage2Text, trimStrWithEnter } from '@/RCUIKit/utils/index';
 import LongPressPopup from '@/RCUIKit/components/long-press-popup.vue';
 import { MessageDirection, MessageType, SentStatus } from '@rongcloud/imlib-next';
 import { reaction } from 'mobx';
@@ -130,7 +130,7 @@ const latestMessage = computed(() => {
   if (props.data.draft) {
     try {
       const draft = JSON.parse(props.data.draft).content;
-      return draft.trim();
+      return trimStrWithEnter(draft.trim());
     } catch (error) {
       return '';
     }

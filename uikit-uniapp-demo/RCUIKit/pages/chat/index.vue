@@ -1,6 +1,11 @@
 <template>
   <view class="rc-chat">
+     <!-- #ifdef MP-TOUTIAO -->
+     <!-- 头条小程序获取缩略图时，需要一个隐藏的canvas，用于获取图片的尺寸信息 -->
+		<canvas id="rc-canvas-help" style="position: absolute; top: -10000px" type="2d"></canvas>
+     <!-- #endif -->
     <!-- 导航栏 -->
+	<!-- #ifndef MP-TOUTIAO -->
     <nav-bar :border="true" leftIcon="left" :leftWidth="80" :rightWidth="80"  @touchmove.stop.prevent="() => {}">
       <template v-slot:left>
         <view class="rc-chat-nav-left">
@@ -14,7 +19,7 @@
         </view>
       </template>
     </nav-bar>
-
+	<!-- #endif -->
     <!-- 消息列表区域 -->
     <view class="rc-chat-message-list" @touchstart="handleTouchMessageListStart">
       <MessageList/>
@@ -43,6 +48,7 @@ import { events } from '@/RCUIKit/constant/events';
 import { ConversationType } from '@rongcloud/imlib-next';
 import { onHide } from '@dcloudio/uni-app';
 import { AudioManager } from './message/manager/audio-manager';
+import { onReady } from '@dcloudio/uni-app';
 
 const nickname = ref('');
 // 未读消息数
@@ -55,10 +61,24 @@ const backToConversation = () => {
   uni.navigateBack();
 };
 
+onReady(() => {
+	// #ifdef MP-TOUTIAO
+	uni.setNavigationBarTitle({
+    title: nickname.value,
+	});
+	// #endif
+});
 const nicknameDisposer = autorun(() => {
   openedConversation.value = uni.$RongKitStore.conversationStore.openedConversation;
   nickname.value = openedConversation.value?.nickName || openedConversation.value?.name || openedConversation.value?.targetId || '';
+
+  // #ifdef MP-TOUTIAO
+  uni.setNavigationBarTitle({
+    title: nickname.value,
+  });
+  // #endif
 });
+
 const isShowMessageInput = computed(() => openedConversation.value?.conversationType !== ConversationType.SYSTEM);
 
 const handleTouchMessageListStart = () => {

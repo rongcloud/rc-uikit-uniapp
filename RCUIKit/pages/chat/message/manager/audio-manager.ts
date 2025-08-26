@@ -60,6 +60,7 @@ export class AudioManager {
     this.currentMessageId = messageId;
     // 创建新的音频上下文
     this.currentAudioContext = uni.createInnerAudioContext();
+	this.currentAudioContext.obeyMuteSwitch = false;
 
     // 设置音频源
     this.currentAudioContext.src = audioUrl;

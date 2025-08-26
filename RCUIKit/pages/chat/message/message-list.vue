@@ -58,9 +58,16 @@ onMounted(async () => {
     // 触发一次加载消息
     refreshTriggered.value = true;
   } else {
-    setTimeout(() => {
-      scrollToBottom();
-    }, 10);
+	// #ifdef MP-TOUTIAO
+	setTimeout(() => {
+    scrollToBottom();
+	}, 500);
+	// #endif
+	// #ifndef MP-TOUTIAO
+	setTimeout(() => {
+    scrollToBottom();
+	}, 10);
+	// #endif
   }
   uni.$on(events.SCROLL_TO_BOTTOM, scrollToBottom);
   uni.$on(events.INPUT_STATUS_CHANGE, scrollToBottom);
@@ -153,6 +160,7 @@ const loadMore = async () => {
     uni.$RongKitStore.conversationStore.openedConversation.key,
     lastMsg ? lastMsg.sentTime : 0, // 如果列表中没有消息，则从当前时间开始查询
     lastMsg?.messageUId, // 如果列表中没有消息，则传 undefined, 表示初次查询列表
+    10,
   );
 
   isLoading.value = false;
@@ -178,16 +186,22 @@ const loadMore = async () => {
 
   // 加载更多后要调整滚动条位置
   // 如果加载之前消息列表不为空，则滑动到原始消息位置，否则滑动到底部
-  if (lastMsg) {
-    const index = messageList.value.findIndex((item) => item.key === lastMsg.key);
-    if (index - 1 >= 0) {
-      scrollIntoView.value = messageList.value[index - 1].messageUId;
+  // #ifdef MP-TOUTIAO
+  setTimeout(() => {
+  // #endif
+    if (lastMsg) {
+      const index = messageList.value.findIndex((item) => item.key === lastMsg.key);
+      if (index - 1 >= 0) {
+        scrollIntoView.value = messageList.value[index - 1].messageUId;
+      } else {
+        scrollIntoView.value = lastMsg.key;
+      }
     } else {
-      scrollIntoView.value = lastMsg.key;
+      scrollToBottom();
     }
-  } else {
-    scrollToBottom();
-  }
+  // #ifdef MP-TOUTIAO
+  }, 500);
+  // #endif
 };
 
 /**
@@ -208,6 +222,11 @@ const onReceiveMessage = (messages: IMessagesEvent) => {
   // 如果包含当前会话的存储消息，需滑动到底部
   if (messageList.value.length <= 60) {
     scrollToBottom();
+	// #ifdef MP-TOUTIAO
+	setTimeout(() => {
+		uni.$emit(events.SCROLL_TO_BOTTOM);
+	}, 500);
+	// #endif
   }
 };
 

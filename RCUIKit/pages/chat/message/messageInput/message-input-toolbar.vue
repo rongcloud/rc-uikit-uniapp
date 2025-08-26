@@ -17,6 +17,8 @@
   import {
  isApp, isH5, isWeixin, isAndroidApp, generateImageThumbnail, generateVideoThumbnail,
  getFileName, getImageInfo, uniRuntimeVersion, versionCompare,
+ isMiniProgram,
+ isToutiao,
 } from '@/RCUIKit/utils';
   import { requestAndroidPermission, gotoAppPermissionSetting } from '@/RCUIKit/external/permission';
   import { IMediaMessageOptions, sendMediaMessage } from '@/RCUIKit/utils/upload';
@@ -125,7 +127,7 @@
     // 微信图片和视频选择、app 视频选取、app 图片和视频拍摄使用 uni.chooseMedia 接口
     // app 图片选取使用 uni.chooseImage 接口
     // h5 视频选取使用 uni.chooseVideo 接口
-    if (isWeixin() || (isApp() && mediaType.length === 1 && mediaType[0] === 'video') || sourceType.includes('camera')) {
+    if (isMiniProgram() || (isApp() && mediaType.length === 1 && mediaType[0] === 'video') || sourceType.includes('camera')) {
       if (isApp() && versionCompare(uniRuntimeVersion(), '4.52') === -1) {
         uni.showModal({
           title: '提示',
@@ -143,7 +145,7 @@
           const { tempFiles } = res;
           const results : ChooseResult[] = tempFiles.map((file) => ({
             path: file.tempFilePath,
-            type: file.fileType,
+            type: isToutiao() ? (file as any).mediaType : file.fileType,
             size: file.size,
             duration: file.duration, // video duration
             videoThumbnailPath: file.thumbTempFilePath,
@@ -256,7 +258,7 @@
 } = item;
         // 验证文件是否有效
         if ((!file && isH5()) || (!isH5() && !path)) {
-          console.error('文件不存在或无法访问');
+          console.error('文件不存在或无法访问', JSON.stringify(item));
           return;
         }
 
@@ -279,6 +281,14 @@
           let imageInfoRes : any;
           if ((source && source !== 'camera') || !source) {
             imageInfoRes = await getImageInfo(file, path);
+            console.log(JSON.stringify({
+				code: imageInfoRes.code,
+				data: {
+					width: imageInfoRes?.data?.width,
+					height: imageInfoRes?.data?.height,
+					type: imageInfoRes?.data?.type,
+				},
+			}));
             if (imageInfoRes.code !== ErrorCode.SUCCESS || !imageInfoRes.data) {
               uni.showToast({
                 title: '获取图片信息失败',
@@ -300,7 +310,11 @@
           } else {
             const imageInfo = await generateImageThumbnail(file, path);
             if (imageInfo.code !== ErrorCode.SUCCESS || !imageInfo.data) {
-              console.error('生成图片缩略图失败');
+              console.error(`生成图片缩略图失败，imageInfo：${JSON.stringify(imageInfo)}`);
+              uni.showToast({
+                title: '生成图片缩略图失败',
+                icon: 'none',
+              });
               return;
             }
             baseMessage = new ImageMessage({
@@ -315,7 +329,7 @@
             maxHeight: 240,
           });
           if (videoInfo.code !== ErrorCode.SUCCESS || !videoInfo.data) {
-            console.error('生成视频缩略图失败');
+            console.error('生成视频缩略图失败', videoInfo.code, videoInfo.msg);
             return;
           }
           baseMessage = new SightMessage({
@@ -336,8 +350,13 @@
         uni.$emit(events.SCROLL_TO_BOTTOM);
         await sendMediaMessage(mediaMessageOptions);
         uni.$emit(events.SCROLL_TO_BOTTOM);
-      } catch (error) {
-        console.error('处理媒体文件时出错:', error);
+		// #ifdef MP-TOUTIAO
+		setTimeout(() => {
+			uni.$emit(events.SCROLL_TO_BOTTOM);
+		}, 50);
+		// #endif
+      } catch (error: any) {
+        console.error('处理媒体文件时出错:', error.message, error.stack);
       }
     });
 
