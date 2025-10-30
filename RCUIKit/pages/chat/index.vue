@@ -15,7 +15,7 @@
       </template>
       <template v-slot:default>
         <view class="navi-title">
-          {{ nickname }}
+          {{ titleText }}
         </view>
       </template>
     </nav-bar>
@@ -39,18 +39,17 @@ import MessageList from './message/message-list.vue';
 import MessageInput from './message/messageInput/message-input.vue';
 import { autorun } from 'mobx';
 import {
- ref, onUnmounted, onMounted, computed,
+ ref, onUnmounted, computed,
 } from '../../adapter-vue';
-import { IKitConversation, IKitMessage } from '@rongcloud/imkit-store';
-import { MessageItemType } from './message/message-item.vue';
-import { deepClone } from '@/RCUIKit/utils';
+import { IKitConversation } from '@rongcloud/imkit-store';
 import { events } from '@/RCUIKit/constant/events';
-import { ConversationType } from '@rongcloud/imlib-next';
+import { ConversationType, MessageType } from '@rongcloud/imlib-next';
 import { onHide } from '@dcloudio/uni-app';
 import { AudioManager } from './message/manager/audio-manager';
 import { onReady } from '@dcloudio/uni-app';
 
 const nickname = ref('');
+const isTyping = ref(false);
 // 未读消息数
 const unreadCount = ref(0);
 
@@ -68,18 +67,59 @@ onReady(() => {
 	});
 	// #endif
 });
+// navi title
+let title = ref('');
 const nicknameDisposer = autorun(() => {
   openedConversation.value = uni.$RongKitStore.conversationStore.openedConversation;
   nickname.value = openedConversation.value?.nickName || openedConversation.value?.name || openedConversation.value?.targetId || '';
+  if (openedConversation.value) {
+    const conv = {
+      conversationType: openedConversation.value.conversationType,
+      targetId: openedConversation.value.targetId,
+      channelId: openedConversation.value.channelId,
+    } as any;
+    const typing = uni.$RongKitStore.typingStore.isTyping(conv);
+    isTyping.value = typing.active;
+    title.value = nickname.value;
+    if (typing.active) {
+      // 根据 typing 的 messageType 决定展示内容
+      const hasText = typing.list.some((u: any) => u.messageType === MessageType.TEXT);
+      title.value = hasText ? '对方正在输入中...' : '对方正在讲话...';
+    }
+  }
 
   // #ifdef MP-TOUTIAO
   uni.setNavigationBarTitle({
-    title: nickname.value,
+    title: title.value,
   });
   // #endif
 });
 
+// 监听 typingMap 的变化，实时刷新标题
+const typingDisposer = autorun(() => {
+  if (!openedConversation.value) return;
+  const conv = {
+    conversationType: openedConversation.value.conversationType,
+    targetId: openedConversation.value.targetId,
+    channelId: openedConversation.value.channelId,
+  };
+  const key = uni.$RongKitStore.typingStore.getTypingMapKey(conv);
+  const sub = uni.$RongKitStore.typingStore.typingMap.get(key);
+  const size = sub ? sub.size : 0;
+  isTyping.value = size > 0;
+});
+
 const isShowMessageInput = computed(() => openedConversation.value?.conversationType !== ConversationType.SYSTEM);
+
+const titleText = computed(() => {
+  const naviTitle = isTyping.value ? title.value : nickname.value;
+  // #ifdef MP-TOUTIAO
+  uni.setNavigationBarTitle({
+    title: naviTitle,
+  });
+  // #endif
+  return naviTitle;
+});
 
 const handleTouchMessageListStart = () => {
   // 延迟 100ms 后触发事件，解决点击区域错位的问题
@@ -97,6 +137,7 @@ const unreadCountDisposer = autorun(() => {
 
 onUnmounted(() => {
   nicknameDisposer();
+  typingDisposer();
   unreadCountDisposer();
 });
 

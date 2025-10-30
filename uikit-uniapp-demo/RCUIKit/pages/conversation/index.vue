@@ -26,13 +26,13 @@ import NavBar from '@/RCUIKit/components/nav-bar.vue';
 const { conversationStore } = uni.$RongKitStore;
 onShow(() => {
   conversationStore.openConversation(null);
+  // #ifdef MP-TOUTIAO
+  uni.setNavigationBarTitle({
+    title: '会话',
+  });
+  // #endif
 });
 
-// #ifdef MP-TOUTIAO
-uni.setNavigationBarTitle({
-  title: '会话',
-});
-// #endif
 </script>
 
 <style lang="scss">

@@ -94,6 +94,9 @@ const handleClick = () => {
 .rc-icon-container {
   overflow: hidden;
   padding: 1px;
+  // #ifdef MP-TOUTIAO
+  display: flex;
+  // #endif
 }
 
 .rc-icon-clickable {

@@ -132,7 +132,7 @@ import { IGroupMemberProfile, IKitConversation, IKitMessage } from '@rongcloud/i
 import {
 BaseMessage,
  ConversationType, ErrorCode, IMessagesEvent, MentionedInfoBody, MentionedType, MessageType,
- addEventListener, Events, removeEventListener,
+ addEventListener, Events, removeEventListener, IConversationOption,
 } from '@rongcloud/imlib-next';
 import MessageInputFace from './message-input-face.vue';
 import VoiceRecorder from './message-input-voice-recorder.vue';
@@ -380,9 +380,21 @@ const sendMessage = async () => {
   lastInputText = '';
   inputCursor.value = 0;
 
-  const { code } = await uni.$RongKitStore.messageStore.sendMessage(openedConversation.value.key, data.message, {
-    isMentioned: data.isMentioned,
-  });
+  let code = -1;
+  try {
+    const res = await uni.$RongKitStore.messageStore.sendMessage(openedConversation.value.key, data.message, {
+      isMentioned: data.isMentioned,
+    });
+    code = res.code;
+  } finally {
+    // 解除当前会话 typing 发送限流
+    const conv: IConversationOption = {
+      conversationType: openedConversation.value.conversationType,
+      targetId: openedConversation.value.targetId,
+      channelId: openedConversation.value.channelId,
+    } as IConversationOption;
+    uni.$RongKitStore.typingStore.releaseTypingThrottle(conv);
+  }
 
   // #ifdef MP-TOUTIAO
   setTimeout(() => {
@@ -504,6 +516,16 @@ let mentionedList: {id: string, nickname: string}[] = [];
 const inputHandler = (e: any) => {
   onInputKeyHandler(e);
   lastInputText = text.value;
+  // 发送 typing（单聊）
+  if (openedConversation.value && openedConversation.value.conversationType === ConversationType.PRIVATE) {
+    const conv: IConversationOption = {
+      conversationType: openedConversation.value.conversationType,
+      targetId: openedConversation.value.targetId,
+      channelId: openedConversation.value.channelId,
+    } as IConversationOption;
+    // 以文本为 typing 类型
+    uni.$RongKitStore.typingStore.sendTyping(conv, MessageType.TEXT);
+  }
 };
 
 /**
@@ -608,6 +630,9 @@ const referenceMessageInfo = computed(() => {
 
 const onReferenceMessageHandler = (msg: IKitMessage) => {
   referenceMessage.value = msg;
+  // 引用消息展示会抬高输入区域，可能遮挡底部内容（如语音转文本结果），引用时滚动到底部
+  setTimeout(() => { uni.$emit(events.SCROLL_TO_BOTTOM); }, 0);
+  setTimeout(() => { uni.$emit(events.SCROLL_TO_BOTTOM); }, 120);
 };
 
 /**

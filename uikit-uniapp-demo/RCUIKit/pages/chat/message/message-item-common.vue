@@ -19,6 +19,11 @@
   <view class="rc-common-send-status" v-if="message.messageDirection === 1">
     <RCIcon v-if="message.sentStatus === SentStatus.SENDING" type="sending" :spin="true" :size="40"/>
     <RCIcon v-else-if="message.sentStatus === SentStatus.FAILED" type="sendError":size="40" @click="resendMessage" clickable/>
+    <ReadReceiptIndicator
+      v-if="enableReadV5 && message.sentStatus !== SentStatus.SENDING && message.sentStatus !== SentStatus.FAILED"
+      :message="message"
+      :enable="enableReadV5"
+    />
   </view>
 
 </view>
@@ -29,7 +34,7 @@
  * 常规消息容器组件
  */
 import {
- defineProps, PropType, computed, defineEmits, onMounted,
+ defineProps, PropType, computed, defineEmits, onMounted, ref, onUnmounted,
 } from '../../../adapter-vue';
 import Avatar from '@/RCUIKit/components/avatar.vue';
 import RCIcon from '@/RCUIKit/components/rc-icon.vue';
@@ -40,6 +45,8 @@ import { DEFAULT_USER_PORTRAIT_SVG, DEFAULT_SYSTEM_PORTRAIT_SVG } from '@/RCUIKi
 import { events } from '@/RCUIKit/constant/events';
 import LongPressPopup, { IOptionType } from '@/RCUIKit/components/long-press-popup.vue';
 import { AudioManager } from './manager/audio-manager';
+import ReadReceiptIndicator from './read-receipt-indicator.vue';
+import { autorun } from 'mobx';
 
 const props = defineProps({
   /**
@@ -80,6 +87,16 @@ const emit = defineEmits({
   resend: () => true,
   myMounted: () => true,
 });
+
+// 响应式的 V5 开关（通过 Store + MobX autorun，同步 UI）
+const enableReadV5 = ref<boolean>((uni.$RongKitStore as any)?.enableReadV5 !== false);
+let disposeEnableReadV5: (() => void) | null = null;
+onMounted(() => {
+  disposeEnableReadV5 = autorun(() => {
+    enableReadV5.value = (uni.$RongKitStore as any)?.enableReadV5 !== false;
+  });
+});
+onUnmounted(() => { if (disposeEnableReadV5) disposeEnableReadV5(); });
 
 onMounted(() => {
 	emit('myMounted');
@@ -213,9 +230,8 @@ const handleSelect = (type: string) => {
 @use '../../../styles/_variables.scss' as var;
 .rc-common-wrapper {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   margin-bottom: 10px;
-  align-items: start;
 }
 .reverse {
   flex-direction: row-reverse;
@@ -246,7 +262,9 @@ const handleSelect = (type: string) => {
 }
 
 .rc-common-send-status {
-  padding-top: 10px;
+  align-self: flex-end;
+  padding-top: 0;
+  margin-bottom: 0;
 }
 
 </style>

@@ -23,9 +23,6 @@
 				// #ifdef MP-TOUTIAO 
 				"navigationBarTitleText": ""
 				// #endif 
-        "app-plus": {
-          "bounce": "none"
-        }
 			}
 		},
 		{
@@ -47,6 +44,17 @@
 				// #ifndef MP-TOUTIAO
 				"navigationStyle": "custom"
 				// #endif
+			}
+		},
+		{
+			"path": "RCUIKit/pages/chat/read-receipt-status",
+			"style": {
+				// #ifndef MP-TOUTIAO
+				"navigationStyle": "custom",
+				// #endif
+				// #ifdef MP-TOUTIAO 
+				"navigationBarTitleText": "消息阅读状态"
+				// #endif 
 			}
 		}
 	],

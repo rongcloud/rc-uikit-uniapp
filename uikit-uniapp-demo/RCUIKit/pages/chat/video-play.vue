@@ -21,6 +21,7 @@
       class="video-player"
       @error="handleVideoError"
       show-fullscreen-btn="false"
+      :show-loading="showLoading"
     ></video>
   </view>
 </template>
@@ -37,6 +38,11 @@ import { onLoad } from '@dcloudio/uni-app';
 const videoContext = ref<UniApp.VideoContext | null>(null);
 const videoUrl = ref<string>('');
 const duration = ref<number>(0);
+const showLoading = ref<boolean>(false);
+
+setTimeout(() => {
+  showLoading.value = true;
+}, 3000);
 // 处理视频错误
 const handleVideoError = (e: any) => {
   console.error('视频播放错误:', e);
@@ -78,7 +84,6 @@ onUnmounted(() => {
 @use '../../styles/_variables.scss' as var;
 /* 通用全屏样式 */
 .fullscreen-video {
-  position: fixed;
   width: 100vw;
   /* #ifdef H5 */
   height: 100%;
@@ -112,7 +117,7 @@ onUnmounted(() => {
 }
 
 .video-player {
-  width: 100%;
-  height: 100%;
+  width: 100vw;
+  height: 100vh;
 }
 </style>

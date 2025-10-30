@@ -1,9 +1,14 @@
 import {
   IKitUploadResult, AKitUploadRequest, IKitMediaMessageOptions, IKitUploadInfo,
+  IKitUploadRequestData,
 } from '@rongcloud/imkit-store';
 import {
-  BaseMessage, ISendMessageOptions, ErrorCode, IAsyncRes, IAReceivedMessage,
+  BaseMessage, ISendMessageOptions, ErrorCode, IAsyncRes, IAReceivedMessage, FileType,
 } from '@rongcloud/imlib-next';
+import { readFileArrayBuffer } from './media';
+// // #ifdef APP-PLUS
+// import { uploadFile, cancelUpload } from '@/uni_modules/RCIM-Kit-Utils';
+// // #endif
 
 export interface IMediaMessageOptions {
   conversationKey: string;
@@ -11,42 +16,82 @@ export interface IMediaMessageOptions {
   sendOptions?: ISendMessageOptions;
   info: IKitUploadInfo;
 }
-class RCUniUploadRequest extends AKitUploadRequest {
-  private _uniUploadTask: UniApp.UploadTask | null = null;
 
-  execute(): Promise<IAsyncRes<IKitUploadResult>> {
-    if (!this._requestData) {
+class RCUniUploadRequest extends AKitUploadRequest {
+  private _uniUploadTask: UniApp.RequestTask | UniApp.UploadTask | null = null;
+
+  private _uploadTaskId: string | null = null;
+
+  execute(requestData: IKitUploadRequestData): Promise<IAsyncRes<IKitUploadResult>> {
+    if (!requestData) {
       return Promise.reject(new Error('请求数据不能为空'));
     }
 
-    const formData = this._requestData.body;
     return new Promise((resolve) => {
-      this._uniUploadTask = uni.uploadFile({
-        url: this._requestData!.url,
-        filePath: this.uploadInfo.path,
-        file: this.uploadInfo.file,
-        name: 'file',
-        header: this._requestData!.headers,
-        formData,
-        success: this.handleUploadSuccess(resolve),
-        fail: this.handleUploadFail(resolve),
-      });
-
-      this.bindProgressUpdate();
+      try {
+        if (requestData.method === 'POST') {
+          const requestOptions = {
+            url: requestData.url,
+            filePath: this.uploadInfo.path,
+            file: this.uploadInfo.file,
+            name: 'file',
+            header: requestData.headers,
+            formData: requestData.body,
+            success: this.handleUploadSuccess(resolve),
+            fail: this.handleUploadFail(resolve),
+          };
+          this._uniUploadTask = uni.uploadFile(requestOptions) as UniApp.UploadTask;
+        } else {
+          // // #ifdef APP-PLUS
+          // const requestOptionsApp = {
+          //   url: requestData.url,
+          //   data: requestData.body,
+          //   header: requestData.headers,
+          //   method: requestData.method,
+          //   filePath: requestData.filePath,
+          // };
+          // this._uploadTaskId = uploadFile(requestOptionsApp, (res: any) => {
+          //   const { statusCode, data } = res;
+          //   resolve({ code: statusCode, data });
+          // }, (err: any) => {
+          //   resolve({ code: ErrorCode.UPLOAD_FAIL, msg: err });
+          // });
+          // // #endif
+          // #ifndef APP-PLUS
+          const requestOptions = {
+            url: requestData.url,
+            data: requestData.body,
+            header: requestData.headers,
+            method: requestData.method,
+            success: this.handleUploadSuccess(resolve),
+            fail: this.handleUploadFail(resolve),
+          };
+          this._uniUploadTask = uni.request(requestOptions) as UniApp.RequestTask;
+          // #endif
+        }
+      } catch (e) {
+        console.log('upload request catch', e);
+        resolve({ code: ErrorCode.UPLOAD_FAIL, msg: `${e}` });
+      }
     });
   }
 
   abort(): void {
+    // // #ifdef APP-PLUS
+    // if (this._uploadTaskId) {
+    //   cancelUpload(this._uploadTaskId);
+    // }
+    // // #endif
+    // #ifndef APP-PLUS
     this._uniUploadTask?.abort();
+    // #endif
     super.abort();
   }
 
-  private handleUploadSuccess(resolve: (value: IAsyncRes<IKitUploadResult>) => void) {
-    return (res: UniApp.UploadFileSuccessCallbackResult) => {
+  private handleUploadSuccess(resolve: (value: IAsyncRes<any>) => void) {
+    return (res: UniApp.RequestSuccessCallbackResult | UniApp.UploadFileSuccessCallbackResult) => {
       const { statusCode, data } = res;
-      const code = statusCode === 200 ? ErrorCode.SUCCESS : statusCode;
-      const dataJson = JSON.parse(data);
-      resolve({ code, data: dataJson });
+      resolve({ code: statusCode, data });
     };
   }
 
@@ -55,14 +100,8 @@ class RCUniUploadRequest extends AKitUploadRequest {
       resolve({ code: ErrorCode.UPLOAD_FAIL, msg: err.errMsg });
     };
   }
-
-  private bindProgressUpdate(): void {
-    this._uniUploadTask?.onProgressUpdate((res) => {
-      const { progress } = res;
-      this.uploadInfo.onProgress?.(progress);
-    });
-  }
 }
+
 /**
  * 发送媒体消息失败缓存
  */
@@ -71,10 +110,20 @@ const sendMediaMessageFailedOptionsCache = new Map<number, IKitMediaMessageOptio
 export const sendMediaMessage = async (mediaMessageOptions: IMediaMessageOptions): Promise<IAsyncRes<IAReceivedMessage>> => {
   const { info } = mediaMessageOptions;
 
-  const request = new RCUniUploadRequest(info);
+  let enhancedInfo = { ...info };
+  let file = info.file ?? info.path;
+  if (!file) {
+    return {
+      code: ErrorCode.INVALID_PARAMETER_MEDIA_URL,
+      msg: '文件或路径不能为空',
+    };
+  }
+
+  const request = new RCUniUploadRequest(enhancedInfo);
   const storeMediaMessageOptions: IKitMediaMessageOptions = {
     request,
     ...mediaMessageOptions,
+    info: enhancedInfo,
   };
 
   const res = await uni.$RongKitStore.messageStore?.sendMediaMessage(storeMediaMessageOptions);

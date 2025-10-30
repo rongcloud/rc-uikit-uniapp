@@ -19,6 +19,8 @@
           <rcicon v-if="data.draft.length > 0" class="rc-draft-icon" type="draft" :size="28" />
           <rcicon v-else-if="data.latestMessage && data.latestMessage.sentStatus === SentStatus.FAILED" class="rc-draft-icon" type="sendError" :size="28" />
           <rcicon v-else-if="data.latestMessage && data.latestMessage.sentStatus === SentStatus.SENDING" class="rc-draft-icon" type="sending" :spin="true" :size="28" />
+          <rcicon v-else-if="showReceiptStatus && !isPeerRead" class="rc-draft-icon" type="unread" :size="28" />
+          <rcicon v-else-if="showReceiptStatus && isPeerRead" class="rc-draft-icon" type="read" :size="28" />
           <view class="rc-con-item-middle-message-text">{{ latestMessage }}</view>
         </view>
       </view>
@@ -42,8 +44,11 @@ import avatar from '@/RCUIKit/components/avatar.vue';
 import rcicon from '@/RCUIKit/components/rc-icon.vue';
 import { formatTime, parseMessage2Text, trimStrWithEnter } from '@/RCUIKit/utils/index';
 import LongPressPopup from '@/RCUIKit/components/long-press-popup.vue';
-import { MessageDirection, MessageType, SentStatus } from '@rongcloud/imlib-next';
-import { reaction } from 'mobx';
+import {
+ MessageDirection, MessageType, SentStatus, ConversationType,
+} from '@rongcloud/imlib-next';
+import { reaction, autorun } from 'mobx';
+import { onMounted } from '../../adapter-vue';
 
 const props = defineProps({
   // 会话数据
@@ -96,13 +101,13 @@ const recallMsgContent = ref('');
 let disposeReaction: (() => void) | null = null;
 
 // 获取撤回消息的显示文本
-const getRecallMessageText = (userName: string = '') => `${userName} 撤回了一条消息`;
+const getRecallMessageText = (userName: string = '') => `${userName}撤回了一条消息`;
 
 // 处理撤回消息的用户信息
 const handleRecallMessageUser = (userId: string) => {
   const user = uni.$RongKitStore.appData.getUserProfile(userId);
   if (user) {
-    recallMsgContent.value = getRecallMessageText(user.name);
+    recallMsgContent.value = getRecallMessageText(`${user.name} `);
     return true;
   }
 
@@ -116,7 +121,7 @@ const handleRecallMessageUser = (userId: string) => {
     () => uni.$RongKitStore.appData.getUserInfo(userId),
     (userData) => {
       if (userData?.id === userId) {
-        recallMsgContent.value = getRecallMessageText(userData.name);
+        recallMsgContent.value = getRecallMessageText(`${userData.name} `);
       }
     },
     { fireImmediately: true },
@@ -165,6 +170,36 @@ const latestMessage = computed(() => {
   }
 
   return parseMessage2Text(messageType, content.content);
+});
+
+// 单聊最新消息的己方已读/未读状态（只展示己方发送）
+const isPrivate = computed(() => props.data.conversationType === ConversationType.PRIVATE);
+const isSender = computed(() => !!props.data.latestMessage && props.data.latestMessage.messageDirection === MessageDirection.SEND);
+const readReceiptInfo = computed<any>(() => props.data?.readReceiptInfo);
+const isPeerRead = computed(() => readReceiptInfo.value?.readCount > 0);
+// 使用 Store 中的开关（MobX 可观测）
+const enableReadV5Ref = ref<boolean>((uni.$RongKitStore as any)?.enableReadV5 !== false);
+let disposeEnableReadV5: (() => void) | null = null;
+onMounted(() => {
+  disposeEnableReadV5 = autorun(() => {
+    enableReadV5Ref.value = (uni.$RongKitStore as any)?.enableReadV5 !== false;
+  });
+});
+onUnmounted(() => { if (disposeEnableReadV5) disposeEnableReadV5(); });
+const showReceiptStatus = computed(() => {
+  if (!enableReadV5Ref.value) return false;
+  if (!isPrivate.value) return false;
+  if (!props.data.latestMessage) return false;
+  if (!isSender.value) return false;
+  // 草稿/发送中/失败已在前置条件展示，这里只在正常消息时显示
+  if (props.data.draft.length > 0) return false;
+  const st = props.data.latestMessage.sentStatus as any;
+  if (st === SentStatus.SENDING || st === SentStatus.FAILED) return false;
+  // 仅当消息明确开启 needReceipt 且已拿到对端阅读状态时展示
+  const { needReceipt } = props.data.latestMessage as any;
+  if (needReceipt !== true) return false;
+  // 只有在明确拿到 isRead 的布尔值时展示
+  return true;
 });
 
 // 自定义消息最后一条消息展示示例：

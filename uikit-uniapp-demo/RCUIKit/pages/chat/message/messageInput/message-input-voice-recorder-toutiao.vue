@@ -11,7 +11,8 @@ import {
  ref, onMounted, onUnmounted, nextTick,
 } from '../../../../adapter-vue';
 import { sendMediaMessage } from '@/RCUIKit/utils/upload';
-import { ErrorCode, FileType } from '@rongcloud/imlib-next';
+import { ErrorCode, FileType, MessageType } from '@rongcloud/imlib-next';
+import { sendTypingForOpenedConversation } from '@/RCUIKit/utils/index';
 import { events } from '@/RCUIKit/constant/events';
 import { logger } from '@/RCUIKit/utils/logger';
 import { LogTag } from '@/RCUIKit/enum/logTag';
@@ -88,6 +89,9 @@ const onStartHandler = () => {
   }
   isRecording.value = true;
 
+  // 发送语音 typing（仅单聊）
+  sendTypingForOpenedConversation(MessageType.HQ_VOICE);
+
   // 开始计时
   if (timer !== -1) {
     clearInterval(timer as number);
@@ -132,6 +136,8 @@ const onStopHandler = async (res: any) => {
 
     const hqVoiceMessage = new uni.$RongIMLib.HQVoiceMessage({
       duration,
+      sampleRate: 16000,
+      numberOfChannels: 1,
     });
 
     setTimeout(() => {

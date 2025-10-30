@@ -41,6 +41,12 @@ import warningIcon from './icon/warning.svg?raw';
 import forwardIcon from './icon/forward.svg?raw';
 import deleteTextIcon from './icon/delete-text.svg?raw';
 import deleteText2Icon from './icon/delete-text2.svg?raw';
+import warning2Icon from './icon/warning2.svg?raw';
+import sttCancelIcon from './icon/stt-cancel.svg?raw';
+import sttIcon from './icon/stt.svg?raw';
+import readIcon from './icon/read.svg?raw';
+import unreadIcon from './icon/unread.svg?raw';
+import readStateIcon from './icon/read-state.svg?raw';
 
 import downloadIcon from './icon/download.svg?raw';
 import downloadLoadingIcon from './icon/download-loading.svg?raw';
@@ -98,6 +104,13 @@ export const warning = createObjectURL(warningIcon, 'image/svg+xml');
 export const forward = createObjectURL(forwardIcon, 'image/svg+xml');
 export const deleteText = createObjectURL(deleteTextIcon, 'image/svg+xml');
 export const deleteText2 = createObjectURL(deleteText2Icon, 'image/svg+xml');
+export const warning2 = createObjectURL(warning2Icon, 'image/svg+xml');
+export const sttCancel = createObjectURL(sttCancelIcon, 'image/svg+xml');
+export const stt = createObjectURL(sttIcon, 'image/svg+xml');
+export const read = createObjectURL(readIcon, 'image/svg+xml');
+export const unread = createObjectURL(unreadIcon, 'image/svg+xml');
+export const readState = createObjectURL(readStateIcon, 'image/svg+xml');
+
 export const iconType = {
   left,
   draft,
@@ -141,6 +154,12 @@ export const iconType = {
   forward,
   deleteText,
   deleteText2,
+  warning2,
+  sttCancel,
+  stt,
+  read,
+  unread,
+  readState,
 };
 
 export type IconType = keyof typeof iconType;

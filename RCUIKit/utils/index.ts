@@ -239,11 +239,15 @@ export const parseMessage2Text = (messageType: string, content: string = ''): st
 
 // 如果字符串中有换行，则取出换行前的内容
 export const trimStrWithEnter = (str: string) => {
+  let content: string = str;
+  // #ifdef MP-TOUTIAO
   // 匹配从字符串开头到第一个换行符(\n)或回车换行(\r\n)之前的所有字符
   const regex = /^.*?(?=\r?\n)/;
   const match = str.match(regex);
   // 如果有匹配结果则返回，否则返回原字符串
-  return match ? match[0] : str;
+  content = match ? match[0] : str;
+  // #endif
+  return content;
 };
 
 // 计算内容区域高度
@@ -355,3 +359,19 @@ export const showOpenSettingModal = (str: string) => {
       },
     });
 };
+
+export function sendTypingForOpenedConversation(messageType: string) {
+  try {
+    const opened = (uni as any).$RongKitStore.conversationStore.openedConversation;
+    if (opened && opened.conversationType === (uni as any).$RongIMLib.ConversationType.PRIVATE) {
+      const conv = {
+        conversationType: opened.conversationType,
+        targetId: opened.targetId,
+        channelId: opened.channelId,
+      } as any;
+      (uni as any).$RongKitStore.typingStore.sendTyping(conv, messageType);
+    }
+  } catch (_) {
+    console.error('sendTypingForOpenedConversation error', JSON.stringify(_));
+  }
+}

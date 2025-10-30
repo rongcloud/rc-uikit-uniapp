@@ -13,7 +13,7 @@
     </view>
 
     <!-- 录音弹窗 -->
-    <view class="rc-voice-recorder-modal" v-if="recordStatus === 'recording'">
+    <view class="rc-voice-recorder-modal" v-if="isRecordingView">
       <!-- 蒙版层 -->
       <view
         class="rc-voice-recorder-mask"
@@ -30,23 +30,24 @@
           <RCIcon type="recorder"
             :size="'80px'"
             class="rc-voice-recorder-wave"
-            :class="{ 'recording': recordStatus === 'recording' }"/>
+            :class="{ 'recording': isRecordingView }"/>
         </view>
         <!-- 取消提示 -->
         <text class="rc-voice-recorder-cancel-text">{{ isCancel ? '松手取消发送' : '松开发送 | 上划取消' }}</text>
         <!-- 录音时长 -->
-        <text class="rc-voice-recorder-time">{{ formatTime(durationTime) }}</text>
+        <text class="rc-voice-recorder-time">{{ durationText }}</text>
       </view>
     </view>
   </view>
 </template>
 
 <script lang="ts" setup>
-import { ref } from '../../../../adapter-vue';
+import { ref, computed } from '../../../../adapter-vue';
 import RCIcon from '@/RCUIKit/components/rc-icon.vue';
 import { judgeIosPermission, requestAndroidPermission } from '@/RCUIKit/external/permission';
 import { sendMediaMessage } from '@/RCUIKit/utils/upload';
-import { ErrorCode, FileType } from '@rongcloud/imlib-next';
+import { ErrorCode, FileType, MessageType } from '@rongcloud/imlib-next';
+import { sendTypingForOpenedConversation } from '@/RCUIKit/utils/index';
 import { events } from '@/RCUIKit/constant/events';
 import { logger } from '@/RCUIKit/utils/logger';
 import { LogTag } from '@/RCUIKit/enum/logTag';
@@ -63,6 +64,8 @@ import { throttle } from '@/RCUIKit/utils';
 // stopped: 停止录音状态
 // error: 录音错误状态
 const recordStatus = ref<'none' | 'checking' | 'noPermission' | 'beforeRecording' | 'recording' | 'beforeStopped' | 'stopped' | 'error'>('none');
+const isRecordingView = computed(() => recordStatus.value === 'recording');
+const durationText = computed(() => formatTime(durationTime.value));
 const isCancel = ref(false);
 const durationTime = ref(0);
 const recorderManager = uni.getRecorderManager();
@@ -122,6 +125,8 @@ const startRecording = (e:any) => {
   isCancel.value = false;
   startY = e.touches[0].clientY;
   // 调用录音API
+  // 发送语音 typing（仅单聊）
+  sendTypingForOpenedConversation(MessageType.HQ_VOICE);
   recorderManager.start({
     duration: 60000, // 最长录音时间，单位ms
     sampleRate: 16000, // 采样率
@@ -211,8 +216,6 @@ recorderManager.onStop(async (res) => {
       icon: 'none',
     });
     isCancel.value = false;
-  } else if (duration === 0) {
-    logger.warn(LogTag.K_RECORD_R, 'Record duration is: ', duration);
   } else if (duration < 1) {
     logger.warn(LogTag.K_RECORD_R, 'Record duration too short, duration: ', duration);
     uni.showToast({
@@ -242,6 +245,8 @@ recorderManager.onStop(async (res) => {
 
     const hqVoiceMessage = new uni.$RongIMLib.HQVoiceMessage({
       duration,
+      sampleRate: 16000,
+      numberOfChannels: 1,
     });
 
 	uni.$emit(events.SCROLL_TO_BOTTOM);

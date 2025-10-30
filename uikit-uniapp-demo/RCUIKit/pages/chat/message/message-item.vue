@@ -1,5 +1,5 @@
 <template>
-  <view class="rc-item-wrapper">
+  <view class="rc-item-wrapper" :id="domId">
     <!-- 时间组件 -->
     <view class="rc-item-timer" v-if="message.isShowTime">
       {{ formatTime(message.sentTime, true) }}
@@ -43,7 +43,7 @@
 
     <!-- 撤回消息组件 -->
     <message-notification v-else-if="message.messageType === MessageType.RECALL_MESSAGE_TYPE">
-      {{ message.messageDirection === MessageDirection.RECEIVE ? message.user.nickname : '你' }} 撤回了一条消息
+      {{ message.messageDirection === MessageDirection.RECEIVE ? message.user.nickname + ' ' : '你' }}撤回了一条消息
     </message-notification>
 
     <!-- === 自定义消息组件， 如有多个自定义消息组件，请依次往下添加，需要注意使用 v-else-if 进行判断 === -->
@@ -82,6 +82,11 @@ const props = defineProps({
   message: {
     type: Object as PropType<MessageItemType>,
     required: true,
+  },
+  domId: {
+    type: String,
+    required: false,
+    default: '',
   },
 });
 

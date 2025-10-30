@@ -60,7 +60,14 @@ export class AudioManager {
     this.currentMessageId = messageId;
     // 创建新的音频上下文
     this.currentAudioContext = uni.createInnerAudioContext();
-	this.currentAudioContext.obeyMuteSwitch = false;
+    // 部分平台（如 H5/Safari）该属性可能为只读或不存在，需做保护
+    try {
+      if (this.currentAudioContext && 'obeyMuteSwitch' in this.currentAudioContext) {
+        (this.currentAudioContext as any).obeyMuteSwitch = false;
+      }
+    } catch (e) {
+      console.warn('Set obeyMuteSwitch failed:', e);
+    }
 
     // 设置音频源
     this.currentAudioContext.src = audioUrl;
