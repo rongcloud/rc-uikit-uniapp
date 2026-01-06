@@ -201,7 +201,7 @@
           let results : ChooseResult[] = (Array.isArray(tempFiles) ? tempFiles : [tempFiles])
             .map((file) => ({
               file: isH5() ? file as File : undefined,
-              path: !isH5() ? (file as UniNamespace.ChooseImageSuccessCallbackResultFile).path : '',
+              path: (file as UniNamespace.ChooseImageSuccessCallbackResultFile).path,
               type: 'image' as const,
               size: file.size,
             }));
@@ -218,6 +218,7 @@
         success: (res) => {
           chooseResult([{
             file: res.tempFile as File,
+            path: res.tempFilePath,
             type: 'video' as const,
             duration: res.duration,
             name: res.name,

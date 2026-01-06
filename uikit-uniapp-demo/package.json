@@ -5,7 +5,7 @@
   "dependencies": {
     "@rongcloud/engine": "^5.30.0",
     "@rongcloud/imlib-next": "^5.30.0",
-    "@rongcloud/imkit-store": "1.2.0",
+    "@rongcloud/imkit-store": "1.2.1",
     "base-64": "^1.0.0",
     "mobx": "^6.13.7"
   }
