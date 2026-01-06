@@ -295,8 +295,8 @@ const clickInputShadeHandler = () => {
  */
 const onFocusHandler = (e: any) => {
   switchInput(['isShowInputBox']);
+	paddingBottom.value = 0;
   // #ifdef WEB
-  paddingBottom.value = 0;
   setTimeout(() => {
     document.querySelector('.rc-input-text-input')?.scrollIntoView();
   }, 100);
@@ -344,7 +344,11 @@ const onKeyboardHeightChangeHandler = (e: any) => {
     }
   // #endif
   // #ifdef APP-PLUS
-  if (uni.getSystemInfoSync().platform === 'ios') {
+  const { safeAreaInsets, platform } = uni.getSystemInfoSync();
+  const bottom = safeAreaInsets?.bottom || 0;
+  // 判断是否有 tabBar：windowBottom > 0 表示存在 tabBar
+  const hasTabBar = bottom > 0;
+  if (!hasTabBar && platform === 'ios') {
     if (height > 0 && height > paddingBottom.value) {
       height -= 30;
     }
@@ -742,10 +746,10 @@ onUnmounted(() => {
 .rc-input-wrap {
   display: flex;
   padding: 9px 11px;
-  align-items: flex-end;
-  box-sizing: border-box;
-  min-height: 56px;
-  justify-content: space-between;
+  // align-items: flex-end;
+  // box-sizing: border-box;
+  // min-height: 56px;
+  // justify-content: space-between;
 }
 .rc-input {
   &-text {
