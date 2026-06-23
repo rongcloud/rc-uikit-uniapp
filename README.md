@@ -1,5 +1,7 @@
 # RongCloud IM UIKit UniApp
 
+融云 IM UIKit UniApp 版，基于融云 Web IM Lib SDK 封装，提供开箱即用的完整即时通讯 UI 组件库，并配套丰富的示例 Demo，助力开发者高效构建跨平台 IM 应用。
+
 这是融云 IM UIKit 的 Uniapp 版本，提供了完整的即时通讯 UI 组件库及对应的示例 Demo。
 
 ## 目录结构
